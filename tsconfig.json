@@ -19,8 +19,14 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@firebase/*": ["app/firebase/*"],
+      "@adapters/*": ["app/adapters/*"],
+      "@utils/*": ["app/utils/*"],
+      "@components/*": ["app/components/*"],
+      "@contexts/*": ["app/contexts/*"],
+      "@translations/*": ["app/translations/*"]
     }
   },
   "include": [
