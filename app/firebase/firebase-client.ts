@@ -14,7 +14,9 @@ const firebaseConfig = {
 }
 
 // Conditional Firebase initialization
-const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp()
+const app: FirebaseApp = !getApps().length
+  ? initializeApp(firebaseConfig)
+  : getApp()
 const auth: Auth = getAuth(app)
 const db: Firestore = getFirestore(app)
 
