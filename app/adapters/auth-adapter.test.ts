@@ -11,36 +11,85 @@ import {
   adminDb as mockAdminDb,
 } from '../firebase/firebase-admin'
 
-jest.mock('firebase/auth', () => ({
-  sendPasswordResetEmail: jest.fn(),
-  signInWithEmailAndPassword: jest.fn(),
-  signOut: jest.fn(),
-}))
+jest.mock('firebase/app', () => {
+  const mockApp = {
+    name: '[DEFAULT]',
+    options: {},
+    automaticDataCollectionEnabled: false,
+  }
+  return {
+    initializeApp: jest.fn(() => mockApp),
+    getApp: jest.fn(() => mockApp),
+    getApps: jest.fn(() => []),
+  }
+})
+
+jest.mock('firebase/auth', () => {
+  const mockAuth = {
+    currentUser: null,
+    // Add other auth properties as needed
+  }
+  return {
+    getAuth: jest.fn(() => mockAuth),
+    signInWithEmailAndPassword: jest.fn(),
+    signOut: jest.fn(),
+    sendPasswordResetEmail: jest.fn(),
+    onAuthStateChanged: jest.fn(),
+  }
+})
 
 jest.mock('../firebase/firebase-admin', () => {
-  const mockSet = jest.fn()
-  const mockUpdate = jest.fn()
-  const mockDoc = jest.fn(() => ({ set: mockSet, update: mockUpdate }))
-  const mockCollection = jest.fn(() => ({ doc: mockDoc }))
+  const mockDoc = jest.fn(() => ({
+    set: jest.fn().mockResolvedValue(undefined),
+    update: jest.fn().mockResolvedValue(undefined),
+    get: jest.fn().mockResolvedValue({
+      exists: true,
+      data: () => ({
+        roles: ['USER'],
+      }),
+    }),
+  }))
 
   return {
-    auth: {
+    adminAuth: {
       createUser: jest.fn(),
       updateUser: jest.fn(),
       setCustomUserClaims: jest.fn(),
     },
-    db: {
-      collection: mockCollection,
+    adminDb: {
+      collection: jest.fn(() => ({
+        doc: mockDoc,
+      })),
     },
   }
 })
 
+jest.mock('../firebase/firebase-client', () => ({
+  auth: {
+    currentUser: null,
+    // Add other necessary properties
+  },
+  app: {
+    name: '[DEFAULT]',
+    options: {},
+  },
+  db: {
+    // Add mock firestore properties
+  },
+}))
+
 describe('AuthAdapter', () => {
-  let authAdapter: AuthAdapter = new AuthAdapter()
+  let authAdapter: AuthAdapter
+  let consoleSpy: jest.SpyInstance
 
   beforeEach(() => {
     jest.clearAllMocks()
+    consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
     authAdapter = new AuthAdapter()
+  })
+
+  afterEach(() => {
+    consoleSpy.mockRestore()
   })
 
   describe('login', () => {
@@ -61,6 +110,7 @@ describe('AuthAdapter', () => {
         email,
         password
       )
+      expect(consoleSpy).not.toHaveBeenCalled()
     })
 
     it('should throw an AuthError if login fails', async () => {
@@ -74,6 +124,10 @@ describe('AuthAdapter', () => {
 
       await expect(authAdapter.login(email, password)).rejects.toThrow(
         'Failed to log in user'
+      )
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Error logging in user:',
+        expect.any(Error)
       )
       expect(signInWithEmailAndPassword).toHaveBeenCalledWith(
         mockClientAuth,
@@ -90,6 +144,7 @@ describe('AuthAdapter', () => {
       await authAdapter.logout()
 
       expect(signOut).toHaveBeenCalledWith(mockClientAuth)
+      expect(consoleSpy).not.toHaveBeenCalled()
     })
 
     it('should throw an AuthError if logout fails', async () => {
@@ -98,6 +153,10 @@ describe('AuthAdapter', () => {
 
       await expect(authAdapter.logout()).rejects.toThrow(
         'Failed to log out user'
+      )
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Error logging out user:',
+        expect.any(Error)
       )
       expect(signOut).toHaveBeenCalledWith(mockClientAuth)
     })
@@ -112,6 +171,7 @@ describe('AuthAdapter', () => {
       await authAdapter.recoverAccess(email)
 
       expect(sendPasswordResetEmail).toHaveBeenCalledWith(mockClientAuth, email)
+      expect(consoleSpy).not.toHaveBeenCalled()
     })
 
     it('should throw an AuthError if sending the password reset email fails', async () => {
@@ -123,6 +183,10 @@ describe('AuthAdapter', () => {
 
       await expect(authAdapter.recoverAccess(email)).rejects.toThrow(
         'Failed to send password reset email'
+      )
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Error sending password reset email:',
+        expect.any(Error)
       )
       expect(sendPasswordResetEmail).toHaveBeenCalledWith(mockClientAuth, email)
     })
@@ -210,6 +274,11 @@ describe('AuthAdapter', () => {
   })
 
   describe('AuthAdapter - updateUser', () => {
+    beforeEach(() => {
+      jest.clearAllMocks()
+      authAdapter = new AuthAdapter()
+    })
+
     it('should update a user in Firebase Authentication and Firestore', async () => {
       const mockUid = '12345'
       const mockSet = jest.fn().mockResolvedValueOnce(undefined)
