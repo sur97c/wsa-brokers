@@ -1,7 +1,20 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: 'standalone',
+  images: {
+    unoptimized: true,
+    domains: ['localhost'],
+  },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/es',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 export default nextConfig
