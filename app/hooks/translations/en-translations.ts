@@ -1,8 +1,8 @@
 // app/hooks/translations/en-translations.ts
 
-import { Translations } from './translations'
+import { TranslationsType } from './translations'
 
-export const enTranslations: Translations = {
+export const enTranslations: TranslationsType = {
   common: {
     loading: 'Loading...',
     error: 'Error',
@@ -291,39 +291,39 @@ export const enTranslations: Translations = {
     addEditTitle: 'Add/Edit',
     save: 'Save',
     cancel: 'Cancel',
-    filters: {
-      selectColumn: 'Select column',
-      selectOperator: 'Select operator',
-      filterValue: 'Filter value',
-      operators: {
-        eq: 'Equals',
-        neq: 'Not equals',
-        gt: 'Greater than',
-        gte: 'Greater than or equal',
-        lt: 'Less than',
-        lte: 'Less than or equal',
-        between: 'Between',
-        contains: 'Contains',
-      },
-      minValue: 'Min value',
-      maxValue: 'Max value',
-      true: 'True',
-      false: 'False',
-      selectOption: 'Select option',
-      removeFilter: 'Remove filter',
-      dateFormat: 'MM/dd/yyyy',
-    },
-    boolean: {
-      true: 'Yes',
-      false: 'No',
-    },
-    columnVisibility: {
-      title: 'Column Visibility',
-      selectAll: 'Show All',
-      deselectAll: 'Hide All',
-      defaultSelection: 'Reset to Default',
-      buttonTitle: 'Columns',
-    },
+    // filters: {
+    //   selectColumn: 'Select column',
+    //   selectOperator: 'Select operator',
+    //   filterValue: 'Filter value',
+    //   operators: {
+    //     eq: 'Equals',
+    //     neq: 'Not equals',
+    //     gt: 'Greater than',
+    //     gte: 'Greater than or equal',
+    //     lt: 'Less than',
+    //     lte: 'Less than or equal',
+    //     between: 'Between',
+    //     contains: 'Contains',
+    //   },
+    //   minValue: 'Min value',
+    //   maxValue: 'Max value',
+    //   true: 'True',
+    //   false: 'False',
+    //   selectOption: 'Select option',
+    //   removeFilter: 'Remove filter',
+    //   dateFormat: 'MM/dd/yyyy',
+    // },
+    // boolean: {
+    //   true: 'Yes',
+    //   false: 'No',
+    // },
+    // columnVisibility: {
+    //   title: 'Column Visibility',
+    //   selectAll: 'Show All',
+    //   deselectAll: 'Hide All',
+    //   defaultSelection: 'Reset to Default',
+    //   buttonTitle: 'Columns',
+    // },
   },
   validation: {
     required: 'This field is required',

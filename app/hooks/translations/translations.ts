@@ -2,7 +2,7 @@
 
 // import { TableTranslations } from '@/components/advanced-table/advancedTableDefinition'
 
-interface ManagementTranslations {
+export interface ManagementTranslations {
   title: string
   advancedTable: {
     users: TableTranslationBase
@@ -10,12 +10,12 @@ interface ManagementTranslations {
   }
 }
 
-interface CommonTranslations {
+export interface CommonTranslations {
   loading: string
   error: string
 }
 
-interface HeaderTranslations {
+export interface HeaderTranslations {
   title: string
   menu: Record<string, string>
   welcome: string
@@ -24,7 +24,7 @@ interface HeaderTranslations {
   closeLogin: string
 }
 
-interface UserMenuTranslations {
+export interface UserMenuTranslations {
   editProfile: string
   setup: string
   dashboardsSettings: string
@@ -36,7 +36,7 @@ interface UserMenuTranslations {
   showKPIsHome: string
 }
 
-interface LoginFormTranslations {
+export interface LoginFormTranslations {
   email: string
   password: string
   rememberMe: string
@@ -49,7 +49,7 @@ interface LoginFormTranslations {
   sendEmail: string
 }
 
-interface NavigationTranslations {
+export interface NavigationTranslations {
   title: string
   dataSource: string
   mock: string
@@ -65,14 +65,14 @@ interface NavigationTranslations {
   reports: string
 }
 
-interface AuthStateListenerTranslations {
+export interface AuthStateListenerTranslations {
   title: string
   message: string
   extendSession: string
   closeSession: string
 }
 
-interface HomeTranslations {
+export interface HomeTranslations {
   title: string
   spanish: string
   english: string
@@ -85,7 +85,7 @@ interface HomeTranslations {
   }>
 }
 
-interface DashboardTranslations {
+export interface DashboardTranslations {
   title: string
   kpis: Record<
     string,
@@ -129,7 +129,7 @@ interface DashboardTranslations {
   >
 }
 
-interface ValidationTranslations {
+export interface ValidationTranslations {
   required: string
   invalidEmail: string
   minLength: string
@@ -143,7 +143,7 @@ interface ValidationTranslations {
   pastDate: string
 }
 
-interface ErrorTranslations {
+export interface ErrorTranslations {
   notFound: {
     title: string
     message: string
@@ -183,9 +183,48 @@ export interface TableTranslationBase {
   rowOptions?: Record<string, string>
   tableOptions?: Record<string, string>
 }
+
 export type ModuleWithTableKey = 'management'
-export interface Translations {
-  common: CommonTranslations
+
+export interface KeyTranslations {
+  [key: string]: string
+}
+
+// export interface Translations {
+//   common: CommonTranslations
+//   header: HeaderTranslations
+//   userMenu: UserMenuTranslations
+//   loginForm: LoginFormTranslations
+//   navigation: NavigationTranslations
+//   authStateListener: AuthStateListenerTranslations
+//   home: HomeTranslations
+//   dashboard: DashboardTranslations
+//   quotes: { title: string }
+//   policies: { title: string }
+//   claims: { title: string }
+//   payments: { title: string }
+//   clients: { title: string }
+//   management: ManagementTranslations
+//   reports: { title: string }
+//   //   advancedTable: TableTranslations
+//   validation: ValidationTranslations
+//   errors: ErrorTranslations
+//   [key: string]:
+//     | KeyTranslations
+//     | ManagementTranslations
+//     | CommonTranslations
+//     | HeaderTranslations
+//     | UserMenuTranslations
+//     | LoginFormTranslations
+//     | NavigationTranslations
+//     | AuthStateListenerTranslations
+//     | HomeTranslations
+//     | DashboardTranslations
+//     | ValidationTranslations
+//     | ErrorTranslations
+// }
+
+export interface TranslationsType {
   header: HeaderTranslations
   userMenu: UserMenuTranslations
   loginForm: LoginFormTranslations
@@ -200,8 +239,20 @@ export interface Translations {
   clients: { title: string }
   management: ManagementTranslations
   reports: { title: string }
-  //   advancedTable: TableTranslations
   validation: ValidationTranslations
   errors: ErrorTranslations
-  [key: string]: any
+  [key: string]:
+    | KeyTranslations
+    | ManagementTranslations
+    | CommonTranslations
+    | HeaderTranslations
+    | UserMenuTranslations
+    | LoginFormTranslations
+    | NavigationTranslations
+    | AuthStateListenerTranslations
+    | HomeTranslations
+    | DashboardTranslations
+    | ValidationTranslations
+    | ErrorTranslations
+    | { title: string }
 }

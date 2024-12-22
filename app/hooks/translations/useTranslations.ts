@@ -3,7 +3,7 @@
 
 import { useParams } from 'next/navigation'
 import { useMemo } from 'react'
-import { Translations } from '@/hooks/translations/translations'
+import { TranslationsType } from '@/hooks/translations/translations'
 import { esTranslations } from '@/hooks/translations/es-translations'
 import { enTranslations } from '@/hooks/translations/en-translations'
 
@@ -14,18 +14,28 @@ const translations = {
 
 type TranslationValues =
   | string
-  | Translations[keyof Translations]
+  | TranslationsType[keyof TranslationsType]
   | {
-      [K in keyof Translations]: Translations[K] extends object
-        ? Translations[K][keyof Translations[K]]
-        : Translations[K]
-    }[keyof Translations]
+      [K in keyof TranslationsType]: TranslationsType[K] extends object
+        ? TranslationsType[K][keyof TranslationsType[K]]
+        : TranslationsType[K]
+    }[keyof TranslationsType]
 
-export function useTranslations() {
+type TranslationValue = string | Record<string, unknown>
+type TranslationFunction = (
+  key: string,
+  replacements?: Record<string, string>
+) => string
+
+export const useTranslations = (): {
+  t: TranslationFunction
+  lang: string
+  translations: TranslationsType
+} => {
   const params = useParams()
   const lang = (params?.lang as keyof typeof translations) || 'es'
 
-  const currentTranslations = useMemo(() => {
+  const currentTranslations: TranslationsType = useMemo(() => {
     return translations[lang] || translations.es
   }, [lang])
 
@@ -37,10 +47,10 @@ export function useTranslations() {
 
     if (typeof key === 'string' && key.includes('.')) {
       const keys = key.split('.')
-      let current: any = currentTranslations
+      let current: TranslationValue = currentTranslations
       for (const k of keys) {
         if (current && typeof current === 'object' && k in current) {
-          current = current[k]
+          current = (current as Record<string, unknown>)[k] as TranslationValue
         } else {
           current = key
           break
