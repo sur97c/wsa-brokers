@@ -1,5 +1,7 @@
-import { store } from './index'
-import { login, logout } from './slices/authSlice'
+// app/redux/store.test.ts
+
+import { store } from './store'
+import { login, logout } from './slices/auth-slice'
 
 describe('Redux Store', () => {
   it('should handle login action', () => {
