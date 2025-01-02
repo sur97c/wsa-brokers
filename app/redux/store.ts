@@ -1,17 +1,21 @@
 // app/redux/store.ts
 
-import { configureStore } from '@reduxjs/toolkit'
+import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import { persistReducer, persistStore } from 'redux-persist'
+import { reduxMiddleware } from '@/redux/middleware'
 import storage from 'redux-persist/lib/storage'
-import { combineReducers } from 'redux'
-import authReducer from './slices/auth-slice'
+import authReducer from './slices/auth.slice'
 import noopStorage from './noopStorage'
 
+const isClient = typeof window !== 'undefined'
+
 const isLocalStorageAvailable = () => {
+  if (!isClient) return false
+
   try {
     const testKey = '__test__'
-    localStorage.setItem(testKey, testKey)
-    localStorage.removeItem(testKey)
+    window.localStorage.setItem(testKey, testKey)
+    window.localStorage.removeItem(testKey)
     return true
   } catch (e) {
     console.warn('Local storage is not available', e)
@@ -21,11 +25,14 @@ const isLocalStorageAvailable = () => {
 
 const persistConfig = {
   key: 'root',
-  storage: isLocalStorageAvailable() ? storage : noopStorage,
+  storage: isClient && isLocalStorageAvailable() ? storage : noopStorage,
+  // Podemos agregar configuraciones adicionales aquí
+  whitelist: ['auth'], // Solo persistir el estado de autenticación
 }
 
 const rootReducer = combineReducers({
   auth: authReducer,
+  // Otros reducers aquí
 })
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)
@@ -37,10 +44,8 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
       },
-    }),
+    }).concat(reduxMiddleware),
+  devTools: process.env.NODE_ENV !== 'production',
 })
 
 export const persistor = persistStore(store)
-
-export type RootState = ReturnType<typeof rootReducer>
-export type AppDispatch = typeof store.dispatch

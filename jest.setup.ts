@@ -24,6 +24,32 @@ const sessionStorageMock = {
 }
 global.sessionStorage = sessionStorageMock
 
+// Mock Firebase Auth
+jest.mock('firebase/auth', () => ({
+  signInWithEmailAndPassword: jest.fn(),
+  signOut: jest.fn(),
+  sendPasswordResetEmail: jest.fn(),
+  getIdTokenResult: jest.fn(),
+}))
+
+// Mock Firebase Admin
+jest.mock('@/firebase/firebase-admin', () => ({
+  adminAuth: {
+    setCustomUserClaims: jest.fn(),
+    updateUser: jest.fn(),
+    createUser: jest.fn(),
+  },
+  adminDb: {
+    collection: jest.fn(() => ({
+      doc: jest.fn(() => ({
+        get: jest.fn(),
+        set: jest.fn(),
+        update: jest.fn(),
+      })),
+    })),
+  },
+}))
+
 type MockResponse = {
   json: () => Promise<{}>
   headers: Headers

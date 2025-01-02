@@ -1,3 +1,5 @@
+// app/redux/noopStorage.ts
+
 const noopStorage = {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getItem: async (_key: string): Promise<string | null> => {
