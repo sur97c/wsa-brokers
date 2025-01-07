@@ -2,15 +2,16 @@
 
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { logoutUser, updateUserActivity } from '@/redux/slices/auth.slice'
-import { useAuthListener } from '@/hooks/auth/useAuthListener'
-import { useSafeRouter } from '@/hooks/navigation/useSafeRouter'
-import { useTranslations } from '@/translations/hooks/useTranslations'
-import Notification from '@/components/notification/Notification'
 import { faClock, faUserSlash } from '@fortawesome/free-solid-svg-icons'
 import debounce from 'lodash/debounce'
+import { useState, useEffect, useCallback } from 'react'
+
+import Notification from '@/components/notification/Notification'
+import { useAuthListener } from '@/hooks/auth/useAuthListener'
+import { useSafeRouter } from '@/hooks/navigation/useSafeRouter'
+import { useAppDispatch, useAppSelector } from '@/redux/hooks'
+import { logoutUser, updateUserActivity } from '@/redux/slices/auth.slice'
+import { useTranslations } from '@/translations/hooks/useTranslations'
 
 const SESSION_TIMEOUT =
   Number(process.env.NEXT_PUBLIC_SESSION_TIMEOUT) || 1800000

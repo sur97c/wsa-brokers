@@ -1,9 +1,10 @@
 // app/hooks/auth/useAuthListener.ts
 
+import { onAuthStateChanged, User as firebaseUser } from 'firebase/auth'
 import { useEffect, useRef } from 'react'
-import { useAppDispatch, useAppSelector } from '@/redux/hooks'
+
 import { auth } from '@/firebase/firebase.client'
-import { onAuthStateChanged, user as firebaseUser } from 'firebase/auth'
+import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { checkSessionUser, logoutUser } from '@/redux/slices/auth.slice'
 import type { RootState } from '@/redux/types'
 
@@ -58,5 +59,5 @@ export const useAuthListener = () => {
     )
 
     return () => unsubscribe()
-  }, [dispatch, user?.uid, sessionStatus])
+  }, [dispatch, user, user?.uid, sessionStatus])
 }

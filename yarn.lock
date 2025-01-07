@@ -3254,6 +3254,20 @@ eslint-import-resolver-typescript@^3.5.2:
     is-glob "^4.0.3"
     stable-hash "^0.0.4"
 
+eslint-import-resolver-typescript@^3.7.0:
+  version "3.7.0"
+  resolved "https://registry.yarnpkg.com/eslint-import-resolver-typescript/-/eslint-import-resolver-typescript-3.7.0.tgz#e69925936a771a9cb2de418ccebc4cdf6c0818aa"
+  integrity sha512-Vrwyi8HHxY97K5ebydMtffsWAn1SCR9eol49eCd5fJS4O1WV7PaAjbcjmbfJJSMz/t4Mal212Uz/fQZrOB8mow==
+  dependencies:
+    "@nolyfill/is-core-module" "1.0.39"
+    debug "^4.3.7"
+    enhanced-resolve "^5.15.0"
+    fast-glob "^3.3.2"
+    get-tsconfig "^4.7.5"
+    is-bun-module "^1.0.2"
+    is-glob "^4.0.3"
+    stable-hash "^0.0.4"
+
 eslint-module-utils@^2.12.0:
   version "2.12.0"
   resolved "https://registry.npmjs.org/eslint-module-utils/-/eslint-module-utils-2.12.0.tgz"
@@ -3263,7 +3277,7 @@ eslint-module-utils@^2.12.0:
 
 eslint-plugin-import@^2.31.0:
   version "2.31.0"
-  resolved "https://registry.npmjs.org/eslint-plugin-import/-/eslint-plugin-import-2.31.0.tgz"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-import/-/eslint-plugin-import-2.31.0.tgz#310ce7e720ca1d9c0bb3f69adfd1c6bdd7d9e0e7"
   integrity sha512-ixmkI62Rbc2/w8Vfxyh1jQRTdRTF52VxwRVHl/ykPAmqG+Nb7/kNn+byLP0LxPgI7zWA16Jt82SybJInmMia3A==
   dependencies:
     "@rtsao/scc" "^1.1.0"

@@ -1,6 +1,6 @@
-import { useTranslations } from '@/translations/hooks/useTranslations'
-
 import { motion } from 'framer-motion'
+
+import { useTranslations } from '@/translations/hooks/useTranslations'
 
 const LoadingSpinner: React.FC = () => {
   const { t, translations } = useTranslations()

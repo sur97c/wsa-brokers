@@ -1,8 +1,8 @@
 // components/notification/Notification.tsx
 
-import React from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import React from 'react'
 
 interface NotificationProps {
   icon: IconDefinition

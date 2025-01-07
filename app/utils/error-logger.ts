@@ -1,11 +1,12 @@
 // app/utils/error-logger.ts
 
+import { FirebaseError } from 'firebase/app'
+
 import {
   BaseError,
   ErrorSeverity,
   type ErrorMetadata,
 } from '@/models/errors/base.error'
-import { FirebaseError } from 'firebase/app'
 
 export class ErrorLogger {
   private static instance: ErrorLogger

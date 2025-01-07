@@ -2,6 +2,7 @@
 
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+
 import ClientProviders from '@/providers/client.provider'
 import './globals.scss'
 

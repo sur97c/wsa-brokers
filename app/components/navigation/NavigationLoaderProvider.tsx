@@ -2,9 +2,11 @@
 
 'use client'
 
-import { useState, useEffect, type ReactNode } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
+import { useState, useEffect, type ReactNode } from 'react'
+
 import { NavigationLoaderContext } from '@/contexts/navigation/navigation.context'
+
 import { NavigationLoader } from './NavigationLoader'
 
 interface NavigationLoaderProviderProps {

@@ -1,6 +1,7 @@
 // app/redux/middleware/error.middleware.ts
 
 import { Middleware } from '@reduxjs/toolkit'
+
 import { ErrorLogger } from '@/utils/error-logger'
 
 const errorLogger = ErrorLogger.getInstance()

@@ -1,7 +1,7 @@
 //components/errors/ServerErrorPage.tsx
 
-import { esTranslations } from '@/translations/es'
 import { enTranslations } from '@/translations/en'
+import { esTranslations } from '@/translations/es'
 
 interface ErrorPageProps {
   title?: string

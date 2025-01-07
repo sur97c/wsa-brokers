@@ -1,7 +1,7 @@
 // hooks/translations/useLanguage.ts
 
-import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
 
 export function useLanguage() {
   const router = useRouter()

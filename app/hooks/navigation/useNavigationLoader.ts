@@ -1,6 +1,7 @@
 // app/hooks/navigation/useNavigationLoader.ts
 
 import { useContext } from 'react'
+
 import { NavigationLoaderContext } from '@/contexts/navigation/navigation.context'
 
 export const useNavigationLoader = () => {

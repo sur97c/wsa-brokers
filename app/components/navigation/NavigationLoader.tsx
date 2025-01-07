@@ -3,8 +3,9 @@
 'use client'
 
 import { AnimatePresence } from 'framer-motion'
-import { useNavigationLoader } from '@/hooks/navigation/useNavigationLoader'
+
 import { LoadingMessage } from '@/components/loading/LoadingMessage'
+import { useNavigationLoader } from '@/hooks/navigation/useNavigationLoader'
 
 export const NavigationLoader = () => {
   const { isNavigating, loadingMessage } = useNavigationLoader()

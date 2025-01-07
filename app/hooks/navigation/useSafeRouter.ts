@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+
 import { useLanguage } from '@/translations/hooks/useLanguage'
 
 export function useSafeRouter() {

@@ -1,6 +1,7 @@
 // app/[lang]/(public)/home/components/FeatureSection.tsx
 
 import React from 'react'
+
 import { useTranslations } from '@/translations/hooks/useTranslations'
 
 interface FeatureCardProps {

@@ -3,9 +3,8 @@
 'use client'
 
 import ClientErrorPage from '@/components/errors/ClientErrorPage'
-
-import { esTranslations } from '@/translations/es'
 import { enTranslations } from '@/translations/en'
+import { esTranslations } from '@/translations/es'
 import type { Locale } from '@/translations/types/core/locale'
 
 export default function GlobalError({

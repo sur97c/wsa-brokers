@@ -1,14 +1,14 @@
 // app/translations/types/modules/index.ts
-import { HeaderTranslations } from './header'
-import { UserMenuTranslations } from './user-menu'
-import { LoginFormTranslations } from './login'
-import { NavigationTranslations } from './navigation'
-import { AuthStateListenerTranslations } from './auth-state'
-import { HomeTranslations } from './home'
-import { DashboardTranslations } from './dashboard'
-import { ManagementTranslations } from './management'
 import { AdvancedTableTranslations } from './advanced-table'
+import { AuthStateListenerTranslations } from './auth-state'
+import { DashboardTranslations } from './dashboard'
+import { HeaderTranslations } from './header'
+import { HomeTranslations } from './home'
+import { LoginFormTranslations } from './login'
+import { ManagementTranslations } from './management'
+import { NavigationTranslations } from './navigation'
 import { SimpleModuleTranslation } from './simple'
+import { UserMenuTranslations } from './user-menu'
 
 export interface ModuleTranslations {
   header: HeaderTranslations

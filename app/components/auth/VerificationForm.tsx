@@ -1,14 +1,15 @@
 // @/components/login/VerificationForm.tsx
 
-import React, { useEffect } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faPaperPlane } from '@fortawesome/free-solid-svg-icons'
-import { useTranslations } from '@/translations/hooks/useTranslations'
-import LoadingButton from '@/components/ui/buttons/LoadingButton'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { X } from 'lucide-react'
+import React, { useEffect } from 'react'
+
+import LoadingButton from '@/components/ui/buttons/LoadingButton'
+import { BusinessErrorCode } from '@/models/errors'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { clearMessages, resendVerification } from '@/redux/slices/auth.slice'
-import { BusinessErrorCode } from '@/models/errors'
+import { useTranslations } from '@/translations/hooks/useTranslations'
 
 interface VerificationFormProps {
   onClose?: () => void

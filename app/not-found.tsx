@@ -1,6 +1,7 @@
 // app/not-found.tsx
 
 import { headers } from 'next/headers'
+
 import ServerErrorPage from '@/components/errors/ServerErrorPage'
 
 export default async function RootNotFound() {

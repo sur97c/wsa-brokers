@@ -2,8 +2,8 @@
 
 'use client'
 
-import React, { useRef, useState } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
+import React, { useEffect, useRef, useState } from 'react'
 
 interface LoadingOverlayProps {
   children: React.ReactNode
@@ -16,7 +16,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ children }) => {
   const [isVisible, setIsVisible] = useState(false)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  React.useEffect(() => {
+  useEffect(() => {
     // const currentPath = pathname + searchParams.toString()
     const handleStart = () => {
       // Retrasar mostrar el loading para evitar flashes en cargas rápidas

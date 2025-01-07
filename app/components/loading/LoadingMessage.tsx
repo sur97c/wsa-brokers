@@ -1,8 +1,10 @@
 // app/components/loading/LoadingMessage.tsx
 
 import React from 'react'
-import { Spinner } from './Spinner'
+
 import { useTranslations } from '@/translations/hooks/useTranslations'
+
+import { Spinner } from './Spinner'
 
 interface LoadingMessageProps {
   message?: string

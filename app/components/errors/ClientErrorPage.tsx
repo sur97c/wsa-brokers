@@ -1,9 +1,10 @@
 //components/errors/ClientErrorPage.tsx
 'use client'
 
-import { useTranslations } from '@/translations/hooks/useTranslations'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+
+import { useTranslations } from '@/translations/hooks/useTranslations'
 
 interface ErrorPageProps {
   title?: string

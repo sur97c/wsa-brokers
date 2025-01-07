@@ -2,10 +2,12 @@
 
 import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import { persistReducer, persistStore } from 'redux-persist'
-import { reduxMiddleware } from '@/redux/middleware'
 import storage from 'redux-persist/lib/storage'
-import authReducer from './slices/auth.slice'
+
+import { reduxMiddleware } from '@/redux/middleware'
+
 import noopStorage from './noopStorage'
+import authReducer from './slices/auth.slice'
 
 const isClient = typeof window !== 'undefined'
 

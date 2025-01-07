@@ -2,14 +2,15 @@
 
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft, faPaperPlane } from '@fortawesome/free-solid-svg-icons'
-import { useTranslations } from '@/translations/hooks/useTranslations'
-import LoadingButton from '@/components/ui/buttons/LoadingButton'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { X } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+
+import LoadingButton from '@/components/ui/buttons/LoadingButton'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { clearMessages, recoverAccess } from '@/redux/slices/auth.slice'
+import { useTranslations } from '@/translations/hooks/useTranslations'
 
 interface RecoveryFormProps {
   onClose?: () => void

@@ -2,9 +2,10 @@
 
 'use client'
 
+import { useState } from 'react'
+
 import { AuthStateListener } from '@/components/auth/AuthStateListener'
 import Navigation from '@/components/navigation/Navigation'
-import { useState } from 'react'
 import { NavigationLoaderProvider } from '@/components/navigation/NavigationLoaderProvider'
 
 export default function ProtectedLayout({

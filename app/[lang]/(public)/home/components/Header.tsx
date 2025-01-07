@@ -2,11 +2,12 @@
 
 // 'use client'
 
-import Link from 'next/link'
-import Image from 'next/image'
-import React, { useState } from 'react'
-import clsx from 'clsx'
+import { clsx } from 'clsx'
 import { Globe, Menu, X } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
+import React, { useState } from 'react'
+
 import { useLanguage } from '@/translations/hooks/useLanguage'
 import { useTranslations } from '@/translations/hooks/useTranslations'
 

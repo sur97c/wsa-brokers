@@ -1,4 +1,5 @@
 // app/adapters/auth/server.ts
+
 'use server'
 
 import { headers } from 'next/headers'
