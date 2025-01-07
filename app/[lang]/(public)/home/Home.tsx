@@ -1,19 +1,21 @@
 // app/[lang]/(public)/home/Home.tsx
 
+import { clsx } from 'clsx'
 import React, { useState } from 'react'
-import clsx from 'clsx'
+
+import LoginForm from '@/components/auth/LoginForm'
+import RecoveryForm from '@/components/auth/RecoveryForm'
+import VerificationForm from '@/components/auth/VerificationForm'
+import type { MediaItem } from '@/components/background/background'
+import { DynamicBackground } from '@/components/background/DynamicBackground'
 import {
   FlipCard,
   type BackContentType,
 } from '@/components/ui/FlipCard/FlipCard'
 import { useTranslations } from '@/translations/hooks/useTranslations'
-import LoginForm from '@/components/auth/LoginForm'
-import RecoveryForm from '@/components/auth/RecoveryForm'
-import Header from './components/Header'
+
 import FeatureSection from './components/FeatureSection'
-import VerificationForm from '@/components/auth/VerificationForm'
-import { AnimatedBackground } from '@/components/background/AnimatedBackground'
-// import { VideoBackground } from '@/components/background/VideoBackground'
+import Header from './components/Header'
 
 const Home: React.FC = () => {
   const { t, translations } = useTranslations()
@@ -65,20 +67,8 @@ const Home: React.FC = () => {
     }
   }
 
-  // {
-  //   /* <VideoBackground
-  //       videoSrc="/videos/background.mp4"
-  //       overlayOpacity={30}
-  //       fallbackImage="/images/poster.jpg"
-  //     >
-  //       {children}
-  //     </VideoBackground> */
-  // }
-  // {
-  //   /* <AnimatedBackground overlayOpacity={30}>{children}</AnimatedBackground> */
-  // }
-  return (
-    <AnimatedBackground overlayOpacity={30}>
+  const HomeContent = () => {
+    return (
       <div className="min-h-screen relative">
         <Header />
         <main className="flex flex-col">
@@ -169,7 +159,47 @@ const Home: React.FC = () => {
           </div>
         )}
       </div>
-    </AnimatedBackground>
+    )
+  }
+
+  const mediaItems: MediaItem[] = [
+    {
+      src: '/videos/background.mp4',
+      type: 'video',
+      posterImage: '/images/wsa-brokers-poster.png',
+    },
+    {
+      src: '/images/background.gif',
+      type: 'image',
+    },
+    {
+      src: '/videos/background2.mp4',
+      type: 'video',
+      posterImage: '/images/wsa-brokers-poster.png',
+    },
+    {
+      src: '/images/background2.gif',
+      type: 'image',
+    },
+    {
+      src: '/images/background3.gif',
+      type: 'image',
+    },
+    {
+      src: '/images/background4.gif',
+      type: 'image',
+    },
+  ]
+
+  return (
+    <DynamicBackground
+      mediaItems={mediaItems}
+      overlayOpacity={30}
+      playbackMode="random"
+      interval={8000}
+    >
+      <HomeContent />
+    </DynamicBackground>
   )
 }
 

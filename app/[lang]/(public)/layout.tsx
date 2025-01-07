@@ -3,25 +3,24 @@
 'use client'
 
 import { redirect } from 'next/navigation'
-import React, { useEffect } from 'react'
-import { useTranslations } from '@/translations/hooks/useTranslations'
-// import { AnimatedBackground } from '@/components/background/AnimatedBackground'
-// import { VideoBackground } from '@/components/background/VideoBackground'
-import { LoadingOverlay } from '@/components/loading/LoadingOverlay'
+import React, { useEffect, useState, type ReactNode } from 'react'
+
 import { LoadingMessage } from '@/components/loading/LoadingMessage'
+import { LoadingOverlay } from '@/components/loading/LoadingOverlay'
+import { useTranslations } from '@/translations/hooks/useTranslations'
 
 type LayoutProps = {
-  children: React.ReactNode
+  children: ReactNode
   params: Promise<{ lang: string }>
 }
 
 export default function LocaleLayout({ children, params }: LayoutProps) {
-  const [resolvedParams, setResolvedParams] = React.useState<{
+  const [resolvedParams, setResolvedParams] = useState<{
     lang: string
   } | null>(null)
   const { t, translations } = useTranslations()
 
-  React.useEffect(() => {
+  useEffect(() => {
     params.then(setResolvedParams)
   }, [params])
 
@@ -41,14 +40,6 @@ export default function LocaleLayout({ children, params }: LayoutProps) {
 
   return (
     <main className="min-h-screen">
-      {/* <VideoBackground
-        videoSrc="/videos/background.mp4"
-        overlayOpacity={30}
-        fallbackImage="/images/poster.jpg"
-      >
-        {children}
-      </VideoBackground> */}
-      {/* <AnimatedBackground overlayOpacity={30}>{children}</AnimatedBackground> */}
       {children}
       <LoadingOverlay>
         <LoadingMessage />
