@@ -12,4 +12,6 @@ export interface ValidationTranslations {
   invalidDate: string
   futureDate: string
   pastDate: string
+  emailExists: string
+  emailNotExists: string
 }

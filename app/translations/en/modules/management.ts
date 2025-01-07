@@ -1,9 +1,61 @@
 // app/translations/en/modules/management.ts
 
+import { SectionRole, UserRole } from '@/models/user/roles'
 import { ManagementTranslations } from '@/translations/types/modules/management'
 
 export const managementEN: ManagementTranslations = {
   title: 'Management',
+  users: {
+    edit: {
+      title: 'Edit User',
+    },
+    fields: {
+      email: 'Email',
+      displayName: 'Display Name',
+      primaryRole: 'Primary Role',
+      name: 'Name',
+      lastName: 'Last Name',
+      sectionRoles: 'Section Roles',
+      specialPermissions: 'Special Permissions',
+    },
+    permissions: {
+      allowMultipleSessions: 'Allow multiple sessions',
+      blocked: 'Blocked',
+      disabled: 'Disabled',
+    },
+    editCreate: {
+      title: 'Edit User',
+      successMessage: 'User updated successfully',
+      errorMessage: 'Error updating user',
+    },
+    buttons: {
+      new: 'New',
+      save: 'Save',
+      cancel: 'Cancel',
+    },
+    list: {
+      title: 'Users',
+      addUser: 'Add User',
+    },
+  },
+  roles: {
+    [UserRole.SUPERADMIN]: 'Superadmin',
+    [UserRole.ADMIN]: 'Admin',
+    [UserRole.BROKER]: 'Broker',
+    [UserRole.CLIENT]: 'Client',
+    sections: {
+      [SectionRole.USER_MANAGEMENT]: 'User Management',
+      [SectionRole.ROLE_MANAGEMENT]: 'Role Management',
+      [SectionRole.SYSTEM_CONFIG]: 'System Config',
+      [SectionRole.DASHBOARD]: 'Dashboard',
+      [SectionRole.QUOTES]: 'Quotes',
+      [SectionRole.POLICIES]: 'Policies',
+      [SectionRole.CLAIMS]: 'Claims',
+      [SectionRole.REPORTS]: 'Reports',
+      [SectionRole.BROKER_PORTAL]: 'Broker Portal',
+      [SectionRole.CLIENT_PORTAL]: 'Client Portal',
+    },
+  },
   advancedTable: {
     users: {
       columns: {

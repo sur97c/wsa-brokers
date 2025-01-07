@@ -1,9 +1,11 @@
 // app/translations/hooks/useTranslations.ts
 
-import { useLanguage } from './useLanguage'
-import { esTranslations } from '@/translations/es'
+import React, { createElement, Fragment } from 'react'
+
 import { enTranslations } from '@/translations/en'
-import React, { Fragment } from 'react'
+import { esTranslations } from '@/translations/es'
+
+import { useLanguage } from './useLanguage'
 
 type InterpolateValue = string | React.ReactNode
 
@@ -20,7 +22,7 @@ function interpolateWithComponents(
     const key = match[1]
     const value = params[key]
 
-    return React.createElement(Fragment, { key: index }, value)
+    return createElement(Fragment, { key: index }, value)
   })
 }
 

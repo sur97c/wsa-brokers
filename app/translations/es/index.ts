@@ -4,17 +4,18 @@ import { TranslationsConfig } from '@/translations/types'
 
 import { commonES } from './core/common'
 import { errorsES } from './core/errors'
+import { loadingES } from './core/loading'
+import { rolesES } from './core/roles'
+import { sessionES } from './core/session'
 import { validationES } from './core/validation'
-
-import { headerES } from './modules/header'
-import { userMenuES } from './modules/user-menu'
-import { loginFormES } from './modules/login'
-import { navigationES } from './modules/navigation'
-import { authStateListenerES } from './modules/auth-state'
-import { homeES } from './modules/home'
-import { dashboardES } from './modules/dashboard'
-import { managementES } from './modules/management'
 import { advancedTableES } from './modules/advanced-table'
+import { authStateListenerES } from './modules/auth-state'
+import { dashboardES } from './modules/dashboard'
+import { headerES } from './modules/header'
+import { homeES } from './modules/home'
+import { loginFormES } from './modules/login'
+import { managementES } from './modules/management'
+import { navigationES } from './modules/navigation'
 import {
   quotesES,
   policiesES,
@@ -23,8 +24,7 @@ import {
   clientsES,
   reportsES,
 } from './modules/simple'
-import { sessionES } from './core/session'
-import { loadingES } from './core/loading'
+import { userMenuES } from './modules/user-menu'
 
 export const esTranslations: TranslationsConfig = {
   core: {
@@ -33,6 +33,7 @@ export const esTranslations: TranslationsConfig = {
     session: sessionES,
     validation: validationES,
     loading: loadingES,
+    roles: rolesES,
   },
   modules: {
     header: headerES,

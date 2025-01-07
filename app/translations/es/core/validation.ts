@@ -14,4 +14,6 @@ export const validationES: ValidationTranslations = {
   invalidDate: 'La fecha no es válida',
   futureDate: 'La fecha debe ser futura',
   pastDate: 'La fecha debe ser pasada',
+  emailExists: 'El correo electrónico ya existe',
+  emailNotExists: 'El correo electrónico no existe',
 }
