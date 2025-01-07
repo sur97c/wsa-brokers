@@ -113,6 +113,13 @@ export const selectAuthView = createSelector(
   })
 )
 
+// export const selectAuth = (state: RootState) => ({
+//   loading: state.auth.loading,
+//   error: state.auth.error,
+//   user: selectUser(state),
+//   isAuthenticated: state.auth.isAuthenticated,
+// })
+
 export const loginUser = createAsyncThunk<
   SerializedUserProfile,
   UserCredentials,
@@ -385,13 +392,6 @@ const authSlice = createSlice({
       })
   },
 })
-
-// export const selectAuth = (state: RootState) => ({
-//   loading: state.auth.loading,
-//   error: state.auth.error,
-//   user: selectUser(state),
-//   isAuthenticated: state.auth.isAuthenticated,
-// })
 
 export const {
   setUser,

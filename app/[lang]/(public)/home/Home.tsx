@@ -12,6 +12,7 @@ import {
   FlipCard,
   type BackContentType,
 } from '@/components/ui/FlipCard/FlipCard'
+import { useAppSelector } from '@/redux/hooks'
 import { useTranslations } from '@/translations/hooks/useTranslations'
 
 import FeatureSection from './components/FeatureSection'
@@ -24,6 +25,7 @@ const Home: React.FC = () => {
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [backContent, setBackContent] = useState<BackContentType>('recovery')
   const [verificationEmail, setVerificationEmail] = useState<string>('')
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth)
 
   const handleLoginClick = (type: BackContentType = 'recovery') => {
     setBackContent(type)
@@ -79,7 +81,7 @@ const Home: React.FC = () => {
             {' '}
             <h1
               className="text-2xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-4 
-              transition-all duration-500 max-w-4xl text-[#ffffffff]
+              transition-all duration-500 max-w-4xl text-white
               [filter:grayscale(100%)] hover:[filter:grayscale(0%)]
               hover:text-[#1A237E]"
             >
@@ -87,7 +89,8 @@ const Home: React.FC = () => {
             </h1>
             <p
               className="text-base md:text-lg lg:text-xl mb-8 text-gray-600 
-              transition-all duration-300 max-w-2xl px-4 text-[#ffffffff]
+              transition-all duration-300 max-w-2xl px-4 text-white
+              [filter:grayscale(100%)] hover:[filter:grayscale(0%)]
               hover:text-[#1A237E]/80"
             >
               {t(translations.modules.home.message)}
@@ -99,7 +102,8 @@ const Home: React.FC = () => {
                 hover:bg-[#FF8C00] hover:shadow-lg transform hover:-translate-y-0.5
                 shadow-md hover:shadow-[#FF8C00]/20"
             >
-              {t(translations.modules.home.login)}
+              {isAuthenticated && user && 'Dashboard'}
+              {!isAuthenticated && t(translations.modules.home.login)}
             </button>
           </section>
 
@@ -163,10 +167,10 @@ const Home: React.FC = () => {
   }
 
   const mediaItems: MediaItem[] = [
-    {
-      src: '/images/wsa-brokers-poster.png',
-      type: 'image',
-    },
+    // {
+    //   src: '/images/wsa-brokers-poster.png',
+    //   type: 'image',
+    // },
     {
       src: '/videos/background.mp4',
       type: 'video',
@@ -209,7 +213,7 @@ const Home: React.FC = () => {
       mediaItems={mediaItems}
       overlayOpacity={30}
       playbackMode="sequential"
-      interval={8000}
+      interval={10000}
     >
       <HomeContent />
     </DynamicBackground>

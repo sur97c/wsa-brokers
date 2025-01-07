@@ -518,28 +518,22 @@ export class FirebaseAuthAdapter implements IAuthProvider {
       await adminDb
         .collection('sessions')
         .where('userId', '==', uid)
-        .where('active', '==', true)
+        .where('isActive', '==', true)
         .get()
         .then((snapshot) => {
           const batch = adminDb.batch()
           snapshot.docs.forEach((doc) => {
-            batch.update(doc.ref, {
-              active: false,
-              endedAt: new Date(),
-            })
+            batch.delete(doc.ref)
+            // batch.update(doc.ref, {
+            //   active: false,
+            //   endedAt: new Date(),
+            // })
           })
           return batch.commit()
         })
     } catch (error) {
       this.handleFirebaseError(error)
     }
-  }
-
-  async invalidateSession(sessionId: string): Promise<void> {
-    await adminDb.collection('sessions').doc(sessionId).update({
-      isActive: false,
-      lastActivity: new Date(),
-    })
   }
 
   async getUserByEmail(email: string): Promise<UserProfile | null> {
