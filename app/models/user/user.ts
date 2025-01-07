@@ -1,6 +1,5 @@
 // app/models/user/user.ts
 
-// import type { SectionRole, UserRole } from './roles'
 import type {
   UserBase,
   UserRoles,

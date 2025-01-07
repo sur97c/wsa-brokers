@@ -1,5 +1,6 @@
 // app/models/user/types.ts
 
+import type { BaseEntity } from '@/models/base.entity'
 import type { UserProfile } from '@/models/user/user'
 import type { UserRole, SectionRole } from './roles'
 
@@ -28,14 +29,13 @@ export interface UserState {
   allowMultipleSessions: boolean
 }
 
-// Para el modelo de base de datos, usamos Date
-export interface UserTimestampsDB {
+export interface UserTimestampsDB
+  extends Pick<
+    BaseEntity,
+    'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy'
+  > {
   lastLogin?: Date
   lastActivity?: Date
-  createdAt?: Date
-  updatedAt?: Date
-  createdBy?: string
-  updatedBy?: string
 }
 
 // Tipos para metadata adicional
@@ -68,13 +68,19 @@ export interface SessionInvalidationDetails {
 
 export interface SessionValidationResult {
   canLogin: boolean
-  metrics?: SessionMetrics
   error?: {
     code: string
     message: string
   }
-  activeSessions?: number
   oldSession?: string
+  metrics: SessionMetrics
+}
+
+export interface UserSession {
+  sessionId?: string
+  activeSessions: number
+  lastSessionCreated?: Date
+  totalHistoricalSessions: number
 }
 
 export interface SessionMetrics {
@@ -83,34 +89,26 @@ export interface SessionMetrics {
   totalHistoricalSessions: number
 }
 
-export interface UserSession {
-  sessionId?: string
-  sessionMetrics?: SessionMetrics
-  activeSessions: number
-  lastSessionCreated?: Date
-  totalHistoricalSessions: number
-}
-
-export interface SerializedSessionMetrics {
-  activeSessions: number
-  lastSessionCreated?: string // Cambiado de Date a string
-  totalHistoricalSessions: number
-}
-
 // Nueva interfaz para el estado serializado en Redux
 export interface SerializedUserProfile
   extends Omit<
     UserProfile,
-    'primaryRole' | 'sectionRoles' | keyof UserTimestampsDB | 'sessionMetrics'
+    | 'primaryRole'
+    | 'sectionRoles'
+    | keyof UserTimestampsDB
+    | 'lastSessionCreated'
   > {
   primaryRole: string
   sectionRoles: string[]
   // Timestamps serializados
   lastLogin?: string
   lastActivity?: string
-  createdAt?: string
+  createdAt: string
   updatedAt?: string
   createdBy?: string
   updatedBy?: string
-  sessionMetrics?: SerializedSessionMetrics
+  sessionId?: string
+  activeSessions: number
+  lastSessionCreated?: string
+  totalHistoricalSessions: number
 }

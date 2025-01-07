@@ -9,7 +9,7 @@ export interface ValidSessionResponse {
     }
     userId: string
     isOnline: boolean
-    lastActivity: string
+    lastActivity: Date
   }
 }
 
