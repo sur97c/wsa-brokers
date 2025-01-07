@@ -7,6 +7,9 @@
   max-width: 100%;
   transition: transform 0.8s;
   transform-style: preserve-3d;
+  // Añadido para forzar un nuevo contexto de apilamiento
+  isolation: isolate;
+  z-index: 1;
 }
 
 .flip-card-inner {
@@ -16,6 +19,9 @@
   text-align: center;
   transition: transform 0.8s;
   transform-style: preserve-3d;
+  // Forzar aceleración de hardware
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 .rotate-y-180 {
@@ -29,6 +35,8 @@
   height: 100%;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden; /* Safari */
+  transform: translateZ(1px); // Fuerza un nuevo contexto de apilamiento
+  will-change: transform;
 }
 
 .flip-card-front {

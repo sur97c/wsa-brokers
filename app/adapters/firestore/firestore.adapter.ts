@@ -4,9 +4,12 @@ import {
   CollectionReference,
   FirestoreDataConverter,
   DocumentReference,
+  type QueryDocumentSnapshot,
+  type Firestore,
+  type DocumentData,
 } from 'firebase-admin/firestore'
-import { db as clientDb } from '@/firebase/firebase.client'
 import { adminDb } from '@/firebase/firebase.admin'
+import { db as clientDb } from '@/firebase/firebase.client'
 
 /**
  * Base type for Firestore documents, ensuring the presence of an `id` field.
@@ -40,17 +43,17 @@ export class DocumentNotFoundError extends FirestoreError {
 const createConverter = <
   T extends FirestoreDocument,
 >(): FirestoreDataConverter<T> => ({
-  toFirestore(data: T): FirebaseFirestore.DocumentData {
+  toFirestore(data: T): DocumentData {
     const { ...rest } = data
     return rest
   },
-  fromFirestore(snapshot: FirebaseFirestore.QueryDocumentSnapshot): T {
+  fromFirestore(snapshot: QueryDocumentSnapshot): T {
     return { id: snapshot.id, ...snapshot.data() } as T
   },
 })
 
 export class FirestoreAdapter<T extends FirestoreDocument> {
-  private db: FirebaseFirestore.Firestore
+  private db: Firestore
   private collectionRef: CollectionReference<T>
   private isAdmin: boolean
   private collectionName: string
@@ -58,9 +61,7 @@ export class FirestoreAdapter<T extends FirestoreDocument> {
   constructor(collectionName: string, useAdmin: boolean = false) {
     this.isAdmin = useAdmin
     this.collectionName = collectionName
-    this.db = useAdmin
-      ? adminDb
-      : (clientDb as unknown as FirebaseFirestore.Firestore)
+    this.db = useAdmin ? adminDb : (clientDb as unknown as Firestore)
 
     const collection = this.db.collection(collectionName)
     const converter = createConverter<T>()

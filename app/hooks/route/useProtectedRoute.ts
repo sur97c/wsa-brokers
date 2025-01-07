@@ -1,14 +1,16 @@
 // app/hooks/route/useProtectedRoute.ts
 
 import { useState, useEffect, useCallback } from 'react'
-import { useAppSelector } from '@/redux/hooks'
-import { useSafeRouter } from '@/hooks/navigation/useSafeRouter'
+
 import { useNavigationLoader } from '@/hooks/navigation/useNavigationLoader'
-import { useTranslations } from '@/translations/hooks/useTranslations'
+import { useSafeRouter } from '@/hooks/navigation/useSafeRouter'
 import type {
   ProtectedRouteMetadata,
   ProtectedRouteState,
 } from '@/models/route/protected.route'
+import type { SectionRole } from '@/models/user/roles'
+import { useAppSelector } from '@/redux/hooks'
+import { useTranslations } from '@/translations/hooks/useTranslations'
 
 export const useProtectedRoute = (
   config: ProtectedRouteMetadata
@@ -27,9 +29,11 @@ export const useProtectedRoute = (
   const { setIsNavigating, setLoadingMessage } = useNavigationLoader()
 
   const checkAuthorization = useCallback(() => {
-    if (!user || !user.roles) return false
-    return config.allowedRoles.some((role) => user.roles.includes(role))
-  }, [user, config.allowedRoles])
+    if (!user || !user.primaryRole || !user.sectionRoles) return false
+    return config.allowedSections.some((section: SectionRole) =>
+      user.sectionRoles.includes(section)
+    )
+  }, [user, config.allowedSections])
 
   useEffect(() => {
     let mounted = true

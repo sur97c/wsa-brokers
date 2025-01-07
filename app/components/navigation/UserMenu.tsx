@@ -2,8 +2,6 @@
 
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faUserCircle,
   faCog,
@@ -14,10 +12,13 @@ import {
   faBell,
   faWindowClose,
 } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import React, { useEffect, useState } from 'react'
+
 import { useAppSelector } from '@/redux/hooks'
 // import ThemeToggle from "@components/theme-toggle/ThemeToggle"
+import { selectAuthView } from '@/redux/slices'
 import { useTranslations } from '@/translations/hooks/useTranslations'
-import type { RootState } from '@/redux/types'
 // import { LanguageSelector } from '@/components/language-selector/LanguageSelector'
 
 interface UserMenuProps {
@@ -25,7 +26,7 @@ interface UserMenuProps {
 }
 
 const UserMenu: React.FC<UserMenuProps> = ({ onClose }) => {
-  const auth = useAppSelector((state: RootState) => state.auth)
+  const auth = useAppSelector(selectAuthView)
   const [unreadNotifications, setUnreadNotifications] = useState(0)
   const [showHomeKPIs, setShowHomeKPIs] = useState(true)
   const { t, translations } = useTranslations()

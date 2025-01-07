@@ -38,7 +38,7 @@ const db: Firestore = getFirestore(app)
 // Authentication state observer
 onAuthStateChanged(auth, (user: User | null) => {
   if (user) {
-    console.log('Authenticated user:', user)
+    console.log('Authenticated user:', user.uid)
   } else {
     console.log('Unauthenticated user')
   }

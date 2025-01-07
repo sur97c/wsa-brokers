@@ -16,6 +16,9 @@ export enum BusinessErrorCode {
   ACTIVE_SESSION_EXISTS = 'BUS_011',
   INVALID_SESSION = 'BUS_012',
   SESSION_VALIDATION_ERROR = 'BUS_013',
+  USER_NOT_FOUND_IN_DB = 'BUS_014',
+  ROLE_SYNC_ERROR = 'BUS_015',
+  SESSION_METRICS_ERROR = 'BUS_016',
   // ... más códigos específicos
 }
 

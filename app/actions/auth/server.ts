@@ -2,19 +2,26 @@
 
 'use server'
 
-import { AuthService } from '@/services/auth.service'
-import { getAuthProvider } from '@/config/providers'
 import { cookies } from 'next/headers'
-import { UserCredentials } from '@/models/user/user'
+
 import { getDeviceInformationFromHeaders } from '@/adapters/auth/server'
+import { getAuthProvider } from '@/config/providers'
+import { UserCredentials } from '@/models/user/user'
+import { AuthService } from '@/services/auth.service'
 
 const authService = new AuthService(getAuthProvider())
 
 export async function loginAction(credentials: UserCredentials) {
   try {
+    // console.clear()
+    // console.log('===============> loginAction')
     const user = await authService.login(credentials)
+
+    // console.log('USER', user)
     const sessionData = await getDeviceInformationFromHeaders()
 
+    // console.log('SESSION', sessionData)
+    // console.log('===============> sessionData', user, sessionData)
     const cookieStore = await cookies()
     // Limpiar cualquier cookie existente primero
     cookieStore.set({
@@ -85,7 +92,7 @@ export async function logoutAction(uid: string) {
 export async function checkSessionAction() {
   try {
     const cookieStore = await cookies()
-    console.log('Cookies actuales:', cookieStore.getAll())
+    // console.log('Cookies actuales:', cookieStore.getAll())
     const sessionId = cookieStore.get('sessionId')
 
     if (!sessionId?.value) {

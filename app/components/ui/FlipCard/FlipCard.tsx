@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useCallback, useState } from 'react'
 import debounce from 'lodash/debounce'
+import React, { useEffect, useRef, useCallback, useState } from 'react'
+
 import styles from './FlipCard.module.scss'
 
 export type BackContentType = 'recovery' | 'verification'
@@ -91,8 +92,13 @@ export const FlipCard: React.FC<FlipCardProps> = ({
 
   return (
     <div
-      className={`${styles['flip-card']} ${mobileFullWidth ? 'w-full' : ''}`}
-      style={{ '--flip-card-width': flipCardWidth } as React.CSSProperties}
+      className={`${styles['flip-card']} ${mobileFullWidth ? 'w-full' : ''} transform-gpu`}
+      style={
+        {
+          '--flip-card-width': flipCardWidth,
+          transform: 'translateZ(0)',
+        } as React.CSSProperties
+      }
       ref={cardRef}
     >
       <div

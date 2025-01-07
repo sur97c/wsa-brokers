@@ -1,30 +1,33 @@
 // app/adapters/auth/firebase.auth.adapter.ts
 
-import { IAuthProvider } from '@/interfaces/auth.provider'
-import { auth as clientAuth } from '@/firebase/firebase.client'
-import { adminAuth, adminDb } from '@/firebase/firebase.admin'
-import {
-  UserCredentials,
-  UserProfile,
-  type SessionData,
-} from '@/models/user/user'
-import { getDeviceInformationFromHeaders } from './server'
-import {
-  AuthError,
-  AuthErrorCode,
-  BusinessError,
-  BusinessErrorCode,
-} from '@/models/errors'
 import { randomUUID } from 'crypto'
+
 import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   sendEmailVerification,
 } from 'firebase/auth'
 import { UserRecord } from 'firebase-admin/auth'
-import { esTranslations } from '@/translations/es'
+
+import { Timestamp, type DocumentData } from 'firebase-admin/firestore'
+
+import { adminAuth, adminDb } from '@/firebase/firebase.admin'
+import { auth as clientAuth } from '@/firebase/firebase.client'
+import { IAuthProvider } from '@/interfaces/auth.provider'
+import {
+  AuthError,
+  AuthErrorCode,
+  BusinessError,
+  BusinessErrorCode,
+} from '@/models/errors'
+import type { SectionRole, UserRole } from '@/models/user/roles'
+import type { SessionData, SessionMetrics } from '@/models/user/types'
+import { UserCredentials, UserProfile } from '@/models/user/user'
 import { enTranslations } from '@/translations/en'
+import { esTranslations } from '@/translations/es'
 import type { Locale } from '@/translations/types/core/locale'
+
+import { getDeviceInformationFromHeaders } from './server'
 
 // Primero definimos una interfaz para el error de Firebase
 interface FirebaseErrorType {
@@ -38,6 +41,30 @@ interface FirebaseErrorType {
 //   message: string
 //   code: string
 // }
+
+// Helper function antes de la clase
+const toDate = (
+  value: Timestamp | Date | string | undefined | null
+): Date | undefined => {
+  if (!value) return undefined
+
+  // Si es Timestamp de Firestore
+  if (value instanceof Timestamp) {
+    return value.toDate()
+  }
+
+  // Si ya es Date
+  if (value instanceof Date) {
+    return value
+  }
+
+  // Si es string, intentar convertir
+  if (typeof value === 'string') {
+    return new Date(value)
+  }
+
+  return undefined
+}
 
 export class FirebaseAuthAdapter implements IAuthProvider {
   private readonly translations
@@ -101,6 +128,7 @@ export class FirebaseAuthAdapter implements IAuthProvider {
       )
     }
 
+    console.log('error:', error)
     // Si no es un error de Firebase, lanzar error genérico
     throw new AuthError(
       this.translations.core.errors.firebase.auth.unknown,
@@ -113,6 +141,7 @@ export class FirebaseAuthAdapter implements IAuthProvider {
 
   async login(credentials: UserCredentials): Promise<UserProfile> {
     try {
+      // 1. Primero autenticamos al usuario para obtener su UID
       const userCredential = await signInWithEmailAndPassword(
         clientAuth,
         credentials.email,
@@ -126,12 +155,19 @@ export class FirebaseAuthAdapter implements IAuthProvider {
         )
       }
 
-      const userDoc = await adminDb
-        .collection('users')
-        .doc(userCredential.user.uid)
-        .get()
+      // 2. Sincronizamos los roles inmediatamente después de la autenticación
+      // usando Firestore como fuente primaria de verdad
+      await this.syncRoles(userCredential.user.uid, {
+        sourceOfTruth: 'primary',
+      })
 
-      const userRecord = await adminAuth.getUser(userCredential.user.uid)
+      // 3. Después de sincronizar, obtenemos la información actualizada
+      const [userDoc, userRecord] = await Promise.all([
+        adminDb.collection('users').doc(userCredential.user.uid).get(),
+        adminAuth.getUser(userCredential.user.uid),
+      ])
+
+      // 4. Construimos y retornamos el perfil del usuario con los roles actualizados
       return this.buildUserProfile(userRecord, userDoc.data())
     } catch (error) {
       this.handleFirebaseError(error)
@@ -308,14 +344,82 @@ export class FirebaseAuthAdapter implements IAuthProvider {
     }
   }
 
-  async syncRoles(uid: string): Promise<void> {
-    const authUser = await adminAuth.getUser(uid)
-    const roles = authUser.customClaims?.roles || []
+  private areRolesEqual(
+    roles1: { primaryRole: string; sectionRoles: string[] },
+    roles2: { primaryRole: string; sectionRoles: string[] }
+  ): boolean {
+    return (
+      roles1.primaryRole === roles2.primaryRole &&
+      JSON.stringify(roles1.sectionRoles.sort()) ===
+        JSON.stringify(roles2.sectionRoles.sort())
+    )
+  }
 
-    await adminDb.collection('users').doc(uid).update({
-      roles,
-      updatedAt: new Date(),
-    })
+  async syncRoles(
+    uid: string,
+    options: { sourceOfTruth: 'primary' | 'secondary' }
+  ): Promise<void> {
+    try {
+      const [firestoreDoc, userRecord] = await Promise.all([
+        adminDb.collection('users').doc(uid).get(),
+        adminAuth.getUser(uid),
+      ])
+
+      if (!firestoreDoc.exists) {
+        throw new BusinessError(
+          this.translations.core.errors.firebase.business.USER_NOT_FOUND_IN_DB,
+          BusinessErrorCode.USER_NOT_FOUND_IN_DB
+        )
+      }
+
+      const firestoreData = firestoreDoc.data()!
+      const firebaseClaims = userRecord.customClaims || {}
+
+      // Estructura de Firestore
+      const firestoreRoles = {
+        sectionRoles: firestoreData.sectionRoles || [],
+        primaryRole: firestoreData.primaryRole || null,
+      }
+
+      // Estructura actual en Firebase Claims (la vamos a actualizar)
+      const firebaseRoles = {
+        sectionRoles: firebaseClaims.roles || [], // Notar que accedemos a 'roles' en lugar de 'sectionRoles'
+        primaryRole: firebaseClaims.primaryRole || null,
+      }
+
+      // let finalRoles
+      if (options.sourceOfTruth === 'primary') {
+        // Usar Firestore como fuente de verdad
+        // finalRoles = firestoreRoles
+
+        if (!this.areRolesEqual(firebaseRoles, firestoreRoles)) {
+          // Actualizar Firebase Claims con la nueva estructura
+          await adminAuth.setCustomUserClaims(uid, {
+            sectionRoles: firestoreRoles.sectionRoles, // Nuevo nombre del campo
+            primaryRole: firestoreRoles.primaryRole,
+            // No incluimos el campo 'roles' anterior
+          })
+        }
+      } else {
+        // Usar Firebase Claims como fuente de verdad
+        // finalRoles = {
+        //   sectionRoles: firebaseRoles.sectionRoles,
+        //   primaryRole: firebaseRoles.primaryRole,
+        // }
+
+        if (!this.areRolesEqual(firestoreRoles, firebaseRoles)) {
+          await adminDb.collection('users').doc(uid).update({
+            sectionRoles: firebaseRoles.sectionRoles,
+            primaryRole: firebaseRoles.primaryRole,
+            updatedAt: new Date().toISOString(),
+          })
+        }
+      }
+
+      // console.log(`Roles sincronizados para usuario ${uid}:`, finalRoles)
+    } catch (error) {
+      this.handleFirebaseError(error)
+    }
   }
 
   async updateUserActivity(
@@ -353,26 +457,55 @@ export class FirebaseAuthAdapter implements IAuthProvider {
 
   private async buildUserProfile(
     firebaseUser: UserRecord,
-    firestoreData?: FirebaseFirestore.DocumentData
+    firestoreData?: DocumentData
   ): Promise<UserProfile> {
     const userData =
       firestoreData ||
       (await adminDb.collection('users').doc(firebaseUser.uid).get()).data()
 
     return {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email ?? '',
-      displayName: firebaseUser.displayName,
-      emailVerified: firebaseUser.emailVerified,
-      roles: firebaseUser.customClaims?.roles || [],
-      isOnline: true,
-      lastLogin: new Date(),
-      lastActivity: new Date(),
-      blocked: userData?.blocked || false,
-      disabled: userData?.disabled || false,
-      deleted: userData?.deleted || false,
-      allowMultipleSessions: userData?.allowMultipleSessions || false,
-      metadata: userData?.metadata,
+      uid: String(firebaseUser.uid),
+      email: String(firebaseUser.email ?? ''),
+      displayName: firebaseUser.displayName
+        ? String(firebaseUser.displayName)
+        : undefined,
+      emailVerified: Boolean(firebaseUser.emailVerified),
+      primaryRole: String(
+        firebaseUser.customClaims?.primaryRole || ''
+      ) as UserRole,
+      sectionRoles: (Array.isArray(firebaseUser.customClaims?.sectionRoles)
+        ? firebaseUser.customClaims.sectionRoles.map(String)
+        : []) as SectionRole[],
+      isOnline: Boolean(true),
+      lastActivity: toDate(userData?.lastActivity),
+      lastLogin: toDate(userData?.lastLogin),
+      blocked: Boolean(userData?.blocked || false),
+      disabled: Boolean(userData?.disabled || false),
+      deleted: Boolean(userData?.deleted || false),
+      allowMultipleSessions: Boolean(userData?.allowMultipleSessions || false),
+      metadata: userData?.metadata
+        ? JSON.parse(JSON.stringify(userData.metadata))
+        : undefined,
+      updatedAt: toDate(userData?.updatedAt),
+      createdAt: toDate(userData?.createdAt),
+      sessionId: userData?.sessionId ? String(userData.sessionId) : undefined,
+      name: userData?.name ? String(userData.name) : undefined,
+      lastName: userData?.lastName ? String(userData.lastName) : undefined,
+      createdBy: userData?.createdBy ? String(userData.createdBy) : undefined,
+      activeSessions: Number(userData?.activeSessions || 0),
+      lastSessionCreated: toDate(userData?.lastSessionCreated),
+      totalHistoricalSessions: Number(userData?.totalHistoricalSessions || 0),
+      sessionMetrics: userData?.sessionMetrics
+        ? {
+            activeSessions: Number(userData.sessionMetrics.activeSessions || 0),
+            totalHistoricalSessions: Number(
+              userData.sessionMetrics.totalHistoricalSessions || 0
+            ),
+            lastSessionCreated: toDate(
+              userData.sessionMetrics.lastSessionCreated
+            ),
+          }
+        : undefined,
     }
   }
 
@@ -412,5 +545,94 @@ export class FirebaseAuthAdapter implements IAuthProvider {
       isActive: false,
       lastActivity: new Date(),
     })
+  }
+
+  async getUserByEmail(email: string): Promise<UserProfile | null> {
+    try {
+      const userRecord = await adminAuth.getUserByEmail(email)
+      const userDoc = await adminDb
+        .collection('users')
+        .doc(userRecord.uid)
+        .get()
+
+      if (!userDoc.exists) {
+        return null
+      }
+
+      return this.buildUserProfile(userRecord, userDoc.data())
+    } catch (error) {
+      // Si el usuario no existe, retornamos null en lugar de lanzar error
+      if (this.isFirebaseError(error) && error.code === 'auth/user-not-found') {
+        return null
+      }
+      this.handleFirebaseError(error)
+    }
+  }
+
+  async clearTemporaryClaims(uid: string): Promise<void> {
+    try {
+      const userRecord = await adminAuth.getUser(uid)
+      const currentClaims = userRecord.customClaims || {}
+
+      // Mantenemos solo los roles permanentes
+      await adminAuth.setCustomUserClaims(uid, {
+        sectionRoles: currentClaims.sectionRoles || [],
+        primaryRole: currentClaims.primaryRole || null,
+      })
+    } catch (error) {
+      this.handleFirebaseError(error)
+    }
+  }
+
+  async getSessionMetrics(uid: string): Promise<SessionMetrics> {
+    // Métricas por defecto
+    const metrics: SessionMetrics = {
+      activeSessions: 0,
+      totalHistoricalSessions: 0,
+    }
+
+    try {
+      // Obtener sesiones activas
+      const activeSessionsSnapshot = await adminDb
+        .collection('sessions')
+        .where('userId', '==', uid)
+        .where('isActive', '==', true)
+        .get()
+
+      metrics.activeSessions = activeSessionsSnapshot.size
+
+      // Obtener última sesión
+      const totalSessionsSnapshot = await adminDb
+        .collection('sessions')
+        .where('userId', '==', uid)
+        .orderBy('createdAt', 'desc')
+        .limit(1)
+        .get()
+
+      if (!totalSessionsSnapshot.empty) {
+        const lastSession = totalSessionsSnapshot.docs[0]
+        // Convertir la fecha a string ISO
+        metrics.lastSessionCreated = lastSession.data().createdAt
+
+        // Obtener conteo total
+        const countSnapshot = await adminDb
+          .collection('sessions')
+          .where('userId', '==', uid)
+          .count()
+          .get()
+
+        metrics.totalHistoricalSessions = countSnapshot.data()?.count || 0
+      }
+
+      // Asegurarse de que todos los valores son serializables
+      return {
+        activeSessions: Number(metrics.activeSessions),
+        totalHistoricalSessions: Number(metrics.totalHistoricalSessions),
+        lastSessionCreated: toDate(metrics.lastSessionCreated),
+      }
+    } catch (error) {
+      console.error('[getSessionMetrics] Error:', error)
+      return metrics
+    }
   }
 }

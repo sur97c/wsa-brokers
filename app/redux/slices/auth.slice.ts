@@ -1,7 +1,11 @@
 // app/redux/slices/auth.slice.ts
 
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
-import { UserProfile, UserCredentials, serializeUser } from '@/models/user/user'
+import {
+  createSlice,
+  createSelector,
+  createAsyncThunk,
+  PayloadAction,
+} from '@reduxjs/toolkit'
 import {
   loginAction,
   logoutAction,
@@ -11,8 +15,11 @@ import {
   updateUserActivityAction,
 } from '@/actions/auth/server'
 import { BaseError } from '@/models/errors/base.error'
+import { UserRole, SectionRole } from '@/models/user/roles'
+import type { SerializedUserProfile, SessionMetrics } from '@/models/user/types'
+import { UserProfile, UserCredentials } from '@/models/user/user'
+import type { RootState } from '@/redux/types'
 import type { AuthState } from './auth.types'
-import { RoleKey, RoleKeys } from '@/utils/rolesDefinition'
 
 interface StoreState {
   auth: {
@@ -26,12 +33,6 @@ interface AuthError {
   message: string
 }
 
-const validateRoles = (roles: string[]): RoleKey[] => {
-  return roles.filter((role): role is RoleKey =>
-    RoleKeys.includes(role as RoleKey)
-  )
-}
-
 const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
@@ -43,8 +44,81 @@ const initialState: AuthState = {
   logoutRequested: false,
 } as AuthState
 
+const serializeUser = (user: UserProfile): SerializedUserProfile => {
+  return {
+    ...user,
+    primaryRole: user.primaryRole.toString(),
+    sectionRoles: user.sectionRoles.map((role) => role.toString()),
+    lastLogin: user.lastLogin?.toISOString(),
+    lastActivity: user.lastActivity?.toISOString(),
+    createdAt: user.createdAt?.toISOString(),
+    updatedAt: user.updatedAt?.toISOString(),
+    createdBy: user.createdBy,
+    updatedBy: user.updatedBy,
+    sessionMetrics: user.sessionMetrics
+      ? {
+          ...user.sessionMetrics,
+          lastSessionCreated:
+            user.sessionMetrics.lastSessionCreated?.toISOString(),
+        }
+      : undefined,
+  }
+}
+
+const selectAuthState = (state: RootState) => state.auth
+
+const selectUser = createSelector([selectAuthState], (auth: AuthState) => {
+  if (!auth.user) return null
+
+  const user = auth.user
+  return {
+    uid: user.uid as string,
+    email: user.email as string,
+    emailVerified: user.emailVerified as boolean,
+    isOnline: user.isOnline as boolean,
+    displayName: user.displayName as string,
+    name: user.name as string,
+    lastName: user.lastName as string,
+    blocked: user.blocked as boolean,
+    disabled: user.disabled as boolean,
+    deleted: user.deleted as boolean,
+    allowMultipleSessions: user.allowMultipleSessions as boolean,
+    primaryRole: user.primaryRole as UserRole,
+    sectionRoles: user.sectionRoles.map((role) => role as SectionRole),
+    lastLogin: user.lastLogin ? new Date(user.lastLogin) : undefined,
+    lastActivity: user.lastActivity ? new Date(user.lastActivity) : undefined,
+    createdAt: user.createdAt ? new Date(user.createdAt) : undefined,
+    updatedAt: user.updatedAt ? new Date(user.updatedAt) : undefined,
+    createdBy: user.createdBy ? user.createdBy : undefined,
+    updatedBy: user.updatedBy ? user.updatedBy : undefined,
+    sessionId: user.sessionId as string,
+    sessionMetrics: user.sessionMetrics as SessionMetrics,
+    activeSessions: user.activeSessions as number,
+    lastSessionCreated: user.lastSessionCreated
+      ? new Date(user.lastSessionCreated)
+      : undefined,
+    totalHistoricalSessions: user.totalHistoricalSessions as number,
+    metadata: user.metadata as Record<string, unknown>,
+  }
+})
+
+export const selectAuthView = createSelector(
+  [selectAuthState],
+  (auth: AuthState) => ({
+    user: selectUser({ auth } as RootState),
+    loading: auth.loading,
+    error: auth.error,
+    isAuthenticated: auth.isAuthenticated,
+    sessionStatus: auth.sessionStatus,
+    success: auth.success,
+    logoutRequested: auth.logoutRequested,
+    lastActivitySync: auth.lastActivitySync,
+    customClaims: auth.customClaims,
+  })
+)
+
 export const loginUser = createAsyncThunk<
-  UserProfile,
+  SerializedUserProfile,
   UserCredentials,
   {
     rejectValue: AuthError
@@ -58,7 +132,10 @@ export const loginUser = createAsyncThunk<
         message: result.error?.message ?? 'Unknown error',
       })
     }
-    return serializeUser(result.data as UserProfile)
+    console.log('Data before serialization:', result.data)
+    const serializedUser = serializeUser(result.data as UserProfile)
+    console.log('Data after serialization:', serializedUser)
+    return serializedUser
   } catch (error: unknown) {
     return rejectWithValue(error as AuthError)
   }
@@ -195,7 +272,7 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setUser: (state, action: PayloadAction<UserProfile>) => {
-      state.user = action.payload ?? null
+      state.user = serializeUser(action.payload)
       state.error = null
     },
     clearUser: (state) => {
@@ -223,15 +300,12 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.logoutRequested = false
-        state.user = action.payload ?? null
+        state.user = action.payload
         state.loading = false
         state.error = null
         state.isAuthenticated = true
         state.success = true
         state.sessionStatus = 'authenticated'
-        state.customClaims = {
-          roles: validateRoles(action.payload.roles || []),
-        }
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.logoutRequested = false
@@ -253,9 +327,6 @@ const authSlice = createSlice({
         state.user = action.payload
         state.sessionStatus = 'authenticated'
         state.error = null
-        state.customClaims = {
-          roles: validateRoles(action.payload.roles || []),
-        }
       })
       .addCase(checkSessionUser.rejected, (state, action) => {
         state.user = null
@@ -309,15 +380,22 @@ const authSlice = createSlice({
 
       .addCase(updateUserActivity.fulfilled, (state, action) => {
         if (action.payload) {
-          // Si hay payload, actualizar timestamp
           state.lastActivitySync = action.payload
-        }
-        if (state.user) {
-          state.user.lastActivity = new Date().toISOString()
+          // Asegurarnos de guardar la fecha como string ISO
+          if (state.user) {
+            state.user.lastActivity = new Date().toISOString()
+          }
         }
       })
   },
 })
+
+// export const selectAuth = (state: RootState) => ({
+//   loading: state.auth.loading,
+//   error: state.auth.error,
+//   user: selectUser(state),
+//   isAuthenticated: state.auth.isAuthenticated,
+// })
 
 export const {
   setUser,

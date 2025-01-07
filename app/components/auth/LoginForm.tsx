@@ -2,17 +2,22 @@
 
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowRight, faSignInAlt } from '@fortawesome/free-solid-svg-icons'
-import { useTranslations } from '@/translations/hooks/useTranslations'
-import LoadingButton from '@/components/ui/buttons/LoadingButton'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { X } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+
+import LoadingButton from '@/components/ui/buttons/LoadingButton'
 import { useSafeRouter } from '@/hooks/navigation/useSafeRouter'
-import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import type { RootState } from '@/redux/types'
-import { clearMessages, loginUser } from '@/redux/slices/auth.slice'
 import { BusinessErrorCode } from '@/models/errors'
+import { SectionRole } from '@/models/user/roles'
+import { useAppDispatch, useAppSelector } from '@/redux/hooks'
+import {
+  clearMessages,
+  loginUser,
+  selectAuthView,
+} from '@/redux/slices/auth.slice'
+import { useTranslations } from '@/translations/hooks/useTranslations'
 
 interface LoginFormProps {
   onClose?: () => void
@@ -30,26 +35,27 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const dispatch = useAppDispatch()
   const [email, setEmail] = useState('')
 
-  const { loading, error, user } = useAppSelector(
-    (state: RootState) => state.auth
-  )
+  const { loading, error, user, isAuthenticated } =
+    useAppSelector(selectAuthView)
+
+  // const { loading, error, user, isAuthenticated } = useAppSelector(selectAuth)
 
   useEffect(() => {
     dispatch(clearMessages())
   }, [dispatch])
 
   useEffect(() => {
-    if (user) {
+    if (user && isAuthenticated) {
       if (onClose) onClose()
 
-      if (user.roles.includes('dashboard')) {
+      if (user?.sectionRoles.includes(SectionRole.DASHBOARD)) {
         safeNavigate('/dashboard')
       } else {
-        const defaultRole = user.roles[0] || ''
+        const defaultRole = user.sectionRoles[0] || ''
         safeNavigate(`/${defaultRole}`)
       }
     }
-  }, [user, onClose, safeNavigate])
+  }, [user, onClose, safeNavigate, isAuthenticated])
 
   const handleLoginUser = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()

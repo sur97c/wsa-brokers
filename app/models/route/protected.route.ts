@@ -1,12 +1,14 @@
 // app/models/route/protected.route.ts
 
 import { ReactNode } from 'react'
-import { RoleKey } from '@/utils/rolesDefinition'
+
 import { TransitionType } from '@/constants/transitions'
 
+import type { SectionRole } from '../user/roles'
+
 export interface ProtectedRouteMetadata {
-  allowedRoles: RoleKey[]
-  skeletonType?: RoleKey
+  allowedSections: SectionRole[]
+  skeletonType?: SectionRole
   transitionType?: TransitionType
   mode: 'redirect' | 'dual'
   redirectPath: string

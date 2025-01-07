@@ -1,62 +1,104 @@
 // app/api/session/validate/route.ts
 
 import { NextResponse } from 'next/server'
-import { adminDb } from '@/firebase/firebase.admin'
+import { adminAuth, adminDb } from '@/firebase/firebase.admin'
+import type {
+  ValidSessionResponse,
+  InvalidSessionResponse,
+} from '@/models/session/types'
+import type { UserRoles } from '@/models/user/types'
 
 export async function POST(request: Request) {
+  function convertToPlainObject(data: unknown): unknown {
+    if (data instanceof Date) {
+      return data.toISOString()
+    }
+
+    if (
+      data &&
+      typeof data === 'object' &&
+      '_seconds' in data &&
+      '_nanoseconds' in data &&
+      typeof data._seconds === 'number'
+    ) {
+      return new Date(data._seconds * 1000).toISOString()
+    }
+
+    if (Array.isArray(data)) {
+      return data.map(convertToPlainObject)
+    }
+
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      const result: Record<string, unknown> = {}
+      for (const [key, value] of Object.entries(data)) {
+        result[key] = convertToPlainObject(value)
+      }
+      return result
+    }
+
+    return data
+  }
+
   try {
     const { sessionId } = await request.json()
 
-    // Verificar sesión
+    // Obtenemos la sesión y convertimos sus datos
     const sessionDoc = await adminDb.collection('sessions').doc(sessionId).get()
-
-    const session = sessionDoc.data()
+    const sessionData = sessionDoc.data()
+    const session = convertToPlainObject(sessionData) as Record<string, unknown>
 
     if (
       !session ||
       !session.isActive ||
-      new Date(session.expiresAt) < new Date()
+      new Date(session.expiresAt as string) < new Date()
     ) {
-      console.log('Session invalid:', { session, now: new Date() })
-      return NextResponse.json({
+      return NextResponse.json<InvalidSessionResponse>({
         valid: false,
         error: { message: 'Invalid session', code: 'INVALID_SESSION' },
       })
     }
 
-    // Obtener datos del usuario
-    const userDoc = await adminDb.collection('users').doc(session.userId).get()
+    // Obtenemos el usuario y sus claims
+    const userAuth = await adminAuth.getUser(session.userId as string)
+    const userClaims = userAuth.customClaims as UserRoles | undefined
 
-    const userData = userDoc.data()
-
-    if (!userData) {
-      return NextResponse.json({
+    if (!userClaims) {
+      return NextResponse.json<InvalidSessionResponse>({
         valid: false,
-        error: { message: 'User not found', code: 'USER_NOT_FOUND' },
+        error: { message: 'User claims not found', code: 'INVALID_CLAIMS' },
       })
     }
 
-    // Actualizar última actividad
+    // Actualizamos actividad y convertimos las fechas
+    const now = new Date()
     await Promise.all([
       adminDb.collection('sessions').doc(sessionId).update({
-        lastActivity: new Date(),
+        lastActivity: now,
       }),
-      adminDb.collection('users').doc(session.userId).update({
-        lastActivity: new Date(),
-      }),
+      adminDb
+        .collection('users')
+        .doc(session.userId as string)
+        .update({
+          lastActivity: now,
+        }),
     ])
 
-    return NextResponse.json({
+    // Devolvemos solo los datos necesarios ya convertidos
+    return NextResponse.json<ValidSessionResponse>({
       valid: true,
       data: {
-        roles: userData.roles || [],
-        userId: session.userId,
-        isOnline: userData.isOnline,
+        roles: {
+          primaryRole: userClaims.primaryRole,
+          sectionRoles: userClaims.sectionRoles,
+        },
+        userId: session.userId as string,
+        isOnline: true,
+        lastActivity: now.toISOString(),
       },
     })
   } catch (error) {
     console.error('Session validation error:', error)
-    return NextResponse.json({
+    return NextResponse.json<InvalidSessionResponse>({
       valid: false,
       error: { message: 'Server error', code: 'SERVER_ERROR' },
     })

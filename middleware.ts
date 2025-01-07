@@ -1,38 +1,55 @@
 // middleware.ts
+
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { SectionRole } from '@/models/user/roles'
+import type { SessionResponse } from '@/models/session/types'
 
-const PROTECTED_PATHS = {
-  '/app/payments': ['payments'],
-  '/app/quotes': ['quotes'],
-  '/app/policies': ['policies'],
-  '/app/claims': ['claims'],
-  '/app/reports': ['reports'],
-  '/app/clients': ['clients'],
-  '/app/management': ['management'],
-  '/app/dashboard': ['dashboard'],
+const isDev = process.env.NODE_ENV === 'development'
+
+const logger = {
+  log: (...args: unknown[]) => {
+    if (isDev) {
+      console.log(...args)
+    }
+  },
+  error: (...args: unknown[]) => {
+    if (isDev) {
+      console.error(...args)
+    }
+  },
+}
+
+const PROTECTED_PATHS: Record<string, SectionRole[]> = {
+  '/app/payments': [SectionRole.PAYMENTS],
+  '/app/quotes': [SectionRole.QUOTES],
+  '/app/policies': [SectionRole.POLICIES],
+  '/app/claims': [SectionRole.CLAIMS],
+  '/app/reports': [SectionRole.REPORTS],
+  '/app/clients': [SectionRole.CLIENTS],
+  '/app/management': [SectionRole.USER_MANAGEMENT, SectionRole.ROLE_MANAGEMENT],
+  '/app/dashboard': [SectionRole.DASHBOARD],
 } as const
 
 export async function middleware(request: NextRequest) {
-  console.log('====== MIDDLEWARE START ======')
-  console.log('🔒 Request URL:', request.url)
+  logger.log('====== MIDDLEWARE START ======')
+  logger.log('🔒 Request URL:', request.url)
 
   const pathname = request.nextUrl.pathname
   const pathWithoutLang = pathname.replace(/^\/[a-z]{2}/, '')
 
-  console.log('📍 Checking path:', pathWithoutLang)
+  logger.log('📍 Checking path:', pathWithoutLang)
 
-  // Si no es ruta protegida, permitir acceso
   if (!pathWithoutLang.startsWith('/app/')) {
-    console.log('⚪ Not a protected route')
+    logger.log('⚪ Not a protected route')
     return NextResponse.next()
   }
 
-  console.log('🛡️ Protected route detected')
+  logger.log('🛡️ Protected route detected')
   const sessionId = request.cookies.get('sessionId')
 
   if (!sessionId?.value) {
-    console.log('❌ No session found')
+    logger.log('❌ No session found')
     return redirectToLogin(request)
   }
 
@@ -44,49 +61,45 @@ export async function middleware(request: NextRequest) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          sessionId: sessionId.value,
-          path: pathWithoutLang,
-        }),
+        body: JSON.stringify({ sessionId: sessionId.value }),
       }
     )
 
-    const result = await response.json()
+    const result = (await response.json()) as SessionResponse
 
     if (!result.valid) {
-      console.log('❌ Session validation failed:', result.error)
+      logger.log('❌ Session validation failed:', result.error)
       return handleInvalidSession(request)
     }
 
-    console.log('✅ Session validated')
+    logger.log('✅ Session validated')
 
-    // Verificar roles si es necesario
     const protectedRoute = Object.keys(PROTECTED_PATHS).find((route) =>
       pathWithoutLang.startsWith(route)
-    ) as keyof typeof PROTECTED_PATHS | undefined
+    )
 
     if (protectedRoute) {
       const requiredRoles = PROTECTED_PATHS[protectedRoute]
-      const userRoles = result.data.roles
+      const userSectionRoles = result.data?.roles.sectionRoles
 
-      if (!hasRequiredRoles(userRoles, requiredRoles)) {
-        console.log('❌ User lacks required roles:', {
+      if (!hasRequiredSectionRoles(userSectionRoles || [], requiredRoles)) {
+        logger.log('❌ User lacks required sectionRoles:', {
           required: requiredRoles,
-          userRoles,
+          userSectionRoles,
         })
         return NextResponse.redirect(new URL('/unauthorized', request.url))
       }
     }
 
-    console.log('✅ Access granted')
+    logger.log('✅ Access granted')
     return NextResponse.next()
   } catch (error) {
-    console.error('❌ Middleware error:', error)
+    logger.error('❌ Middleware error:', error)
     return handleInvalidSession(request)
   }
 }
 
-function hasRequiredRoles(
+function hasRequiredSectionRoles(
   userRoles: string[],
   requiredRoles: readonly string[]
 ): boolean {

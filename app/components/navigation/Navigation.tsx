@@ -2,18 +2,6 @@
 
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useAppDispatch, useAppSelector } from '@/redux/hooks'
-import { RootState } from '@/redux/types'
-import { logoutUser } from '@/redux/slices/auth.slice'
-import { useRoles } from '@/hooks/auth/useRoles'
-import { useLanguage } from '@/translations/hooks/useLanguage'
-import { useTranslations } from '@/translations/hooks/useTranslations'
-import { useSafeRouter } from '@/hooks/navigation/useSafeRouter'
-import Image from 'next/image'
-import { IUserClaims } from '@/models/user/user'
 import {
   User,
   Home,
@@ -21,8 +9,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  HelpCircle,
-  GraduationCap,
+  // HelpCircle,
+  // GraduationCap,
   Menu,
   X,
   LayoutDashboard,
@@ -34,7 +22,19 @@ import {
   BarChart3,
   Globe,
 } from 'lucide-react'
-import type { RoleType } from '@/utils/rolesDefinition'
+import Image from 'next/image'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import React, { useState, useRef, useEffect } from 'react'
+
+import { useNavigation } from '@/hooks/navigation/useNavigation'
+import { useSafeRouter } from '@/hooks/navigation/useSafeRouter'
+import type { MenuItem } from '@/models/navigation/menu'
+import { useAppDispatch, useAppSelector } from '@/redux/hooks'
+import { logoutUser, selectAuthView } from '@/redux/slices/auth.slice'
+import { RootState } from '@/redux/types'
+import { useLanguage } from '@/translations/hooks/useLanguage'
+import { useTranslations } from '@/translations/hooks/useTranslations'
 
 interface NavigationProps {
   isOpen: boolean
@@ -47,13 +47,12 @@ export default function Navigation({ isOpen, onToggle }: NavigationProps) {
   const { language, changeLanguage } = useLanguage()
   const { t, translations } = useTranslations()
   const [currentEntity, setCurrentEntity] = useState('')
-  const Roles = useRoles()
+  const { menuItems } = useNavigation()
   const pathname = usePathname()
-  const auth = useAppSelector((state: RootState) => state.auth)
-  const userClaims = auth?.customClaims as IUserClaims | undefined
-  const userRoles = userClaims?.roles || []
+  const auth = useAppSelector(selectAuthView)
   const dispatch = useAppDispatch()
   const isMockEnabled = useAppSelector((state: RootState) => {
+    console.log('isMockEnabled', state)
     // state.mockConfig.useMockData && state.mockConfig.mockEntities.users
     return true
   })
@@ -61,30 +60,26 @@ export default function Navigation({ isOpen, onToggle }: NavigationProps) {
 
   const toggleDropdown = () => setDropdownOpen(!isDropdownOpen)
 
-  const filteredRoles = Roles.filter((role: RoleType) => {
-    return auth?.isAuthenticated && userRoles.includes(role.key)
-  })
-
   const getIcon = (key: string) => {
     switch (key) {
       case 'home':
-        return <Home className="w-5 h-5" /> // Icono de casa para inicio
+        return <Home className="w-5 h-5" />
       case 'dashboard':
-        return <LayoutDashboard className="w-5 h-5" /> // Dashboard con widgets
+        return <LayoutDashboard className="w-5 h-5" />
       case 'quotes':
-        return <FileText className="w-5 h-5" /> // Documento para cotizaciones
+        return <FileText className="w-5 h-5" />
       case 'policies':
-        return <ClipboardList className="w-5 h-5" /> // Lista/clipboard para pólizas
+        return <ClipboardList className="w-5 h-5" />
       case 'claims':
-        return <AlertTriangle className="w-5 h-5" /> // Triángulo de alerta para reclamaciones
+        return <AlertTriangle className="w-5 h-5" />
       case 'payments':
-        return <CreditCard className="w-5 h-5" /> // Tarjeta de crédito para pagos
+        return <CreditCard className="w-5 h-5" />
       case 'clients':
-        return <Users className="w-5 h-5" /> // Grupo de usuarios para clientes
+        return <Users className="w-5 h-5" />
       case 'management':
-        return <Settings className="w-5 h-5" /> // Engranaje para administración
+        return <Settings className="w-5 h-5" />
       case 'reports':
-        return <BarChart3 className="w-5 h-5" /> // Gráfica de barras para reportes
+        return <BarChart3 className="w-5 h-5" />
       default:
         return <Home className="w-5 h-5" />
     }
@@ -216,26 +211,25 @@ export default function Navigation({ isOpen, onToggle }: NavigationProps) {
           </div>
           {/* Links de navegación móvil */}
           <nav className="flex-1 py-4">
-            {filteredRoles.map((role: RoleType) => (
+            {menuItems.map((menu: MenuItem) => (
               <Link
-                key={role.key}
-                href={buildNavigationPath(language, role.key)}
+                key={menu.key}
+                href={buildNavigationPath(language, menu.key)}
                 className={`flex items-center px-6 py-3 transition-colors
                   ${
                     pathname ===
-                    (role.key === 'home'
+                    (menu.key === 'home'
                       ? `/${language}`
-                      : `/${language}/app/${role}`)
+                      : `/${language}/app/${menu}`)
                       ? 'bg-primary bg-opacity-10 text-primary'
                       : 'hover:bg-gray-100'
                   }`}
                 onClick={() => {
-                  // e.preventDefault()
-                  setCurrentEntity(role.menuLabel)
+                  setCurrentEntity(menu.menuLabel)
                 }}
               >
-                {getIcon(role.key)}
-                <span className="ml-3">{role.menuLabel}</span>
+                {getIcon(menu.key)}
+                <span className="ml-3">{menu.menuLabel}</span>
               </Link>
             ))}
 
@@ -279,7 +273,7 @@ export default function Navigation({ isOpen, onToggle }: NavigationProps) {
         `}
       >
         {/* Logo section */}
-        <div className="flex items-center space-x-2">
+        <div className="flex justify-center items-center space-x-2">
           <Image
             src="/images/WSA-logo-rect.png"
             alt="WSA Logo"
@@ -371,28 +365,27 @@ export default function Navigation({ isOpen, onToggle }: NavigationProps) {
         </div>
         {/* Navigation links desktop */}
         <nav className="py-4">
-          {filteredRoles.map((role: RoleType) => (
+          {menuItems.map((menu: MenuItem) => (
             <Link
-              key={role.key}
-              href={buildNavigationPath(language, role.key)}
+              key={menu.key}
+              href={buildNavigationPath(language, menu.key)}
               className={`flex items-center px-4 py-2 mb-1 transition-colors
                 ${
                   pathname ===
-                    (role.key === 'home'
+                    (menu.key === 'home'
                       ? `/${language}`
-                      : `/${language}/app/${role}`) ||
-                  currentEntity === role.menuLabel
+                      : `/${language}/app/${menu}`) ||
+                  currentEntity === menu.menuLabel
                     ? 'bg-primary bg-opacity-10 text-secondary'
                     : 'hover:bg-gray-100'
                 } ${!isOpen ? 'justify-center' : ''}`}
               onClick={() => {
-                // e.preventDefault()
-                setCurrentEntity(role.menuLabel)
+                setCurrentEntity(menu.menuLabel)
               }}
             >
-              {getIcon(role.key)}
+              {getIcon(menu.key)}
               {isOpen && (
-                <span className="ml-3 truncate">{role.menuLabel}</span>
+                <span className="ml-3 truncate">{menu.menuLabel}</span>
               )}
             </Link>
           ))}
