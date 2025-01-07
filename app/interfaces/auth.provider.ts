@@ -1,7 +1,6 @@
 // app/interfaces/auth.provider.ts
 
 import {
-  SessionInvalidationDetails,
   SessionValidationResult,
   type SessionData,
   type SessionMetrics,
@@ -37,10 +36,6 @@ export interface IAuthProvider {
   // Métodos de gestión de sesiones
   createSession(uid: string, rememberMe: boolean): Promise<string>
   getSession(sessionId: string): Promise<SessionData | null>
-  invalidateSession(
-    sessionId: string,
-    details: SessionInvalidationDetails
-  ): Promise<void>
   checkActiveSessions(uid: string): Promise<SessionValidationResult>
   clearActiveSessions(uid: string): Promise<void>
   getSessionMetrics(uid: string): Promise<SessionMetrics>

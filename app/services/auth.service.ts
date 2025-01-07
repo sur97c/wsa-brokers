@@ -45,9 +45,9 @@ export class AuthService {
 
       await this.authProvider.validateUserState(user.uid)
 
-      const sessionCheck = await this.authProvider.checkActiveSessions(user.uid)
+      // const sessionCheck = await this.authProvider.checkActiveSessions(user.uid)
 
-      // console.log('=======> Obteniendo métricas de sesión', sessionCheck)
+      // // console.log('=======> Obteniendo métricas de sesión', sessionCheck)
       const metrics: SessionMetrics = await this.authProvider.getSessionMetrics(
         user.uid
       )
@@ -162,11 +162,6 @@ export class AuthService {
         totalHistoricalSessions: sessionMetrics?.totalHistoricalSessions || 0,
       }
     } catch (error) {
-      if (sessionId) {
-        await this.invalidateSession(sessionId, user?.uid || '').catch(
-          console.error
-        )
-      }
       const baseError = error as BaseError
       throw new BusinessError(
         baseError.message,
@@ -185,29 +180,11 @@ export class AuthService {
     // Cerrar sesión en el provider
     await this.authProvider.logout()
 
-    // Limpiar sesiones activas
-    await this.authProvider.clearActiveSessions(uid)
-  }
-
-  async invalidateSession(sessionId: string, uid: string): Promise<void> {
-    console.log(
-      `Iniciando invalidación de sesión: ${sessionId} para usuario: ${uid}`
-    )
-
-    await this.authProvider.updateUserActivity(uid, {
-      isOnline: false,
-      lastActivity: new Date(),
-    })
-
-    await this.authProvider.invalidateSession(sessionId, {
-      endedAt: new Date(),
-      endReason: 'MANUAL_INVALIDATION',
-    })
-
-    await this.authProvider.logout()
-    await this.authProvider.clearTemporaryClaims(uid)
-
-    console.log(`Sesión ${sessionId} invalidada exitosamente`)
+    // Limpiar sesiones activas si el usuario no es allowMultipleSessions
+    const user = await this.authProvider.getUser(uid)
+    if (!user.allowMultipleSessions) {
+      await this.authProvider.clearActiveSessions(uid)
+    }
   }
 
   // En auth.service.ts, añadamos más logs para debug
