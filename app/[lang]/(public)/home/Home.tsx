@@ -79,7 +79,7 @@ const Home: React.FC = () => {
             {' '}
             <h1
               className="text-2xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-4 
-              transition-all duration-500 max-w-4xl
+              transition-all duration-500 max-w-4xl text-[#ffffffff]
               [filter:grayscale(100%)] hover:[filter:grayscale(0%)]
               hover:text-[#1A237E]"
             >
@@ -87,7 +87,7 @@ const Home: React.FC = () => {
             </h1>
             <p
               className="text-base md:text-lg lg:text-xl mb-8 text-gray-600 
-              transition-all duration-300 max-w-2xl px-4
+              transition-all duration-300 max-w-2xl px-4 text-[#ffffffff]
               hover:text-[#1A237E]/80"
             >
               {t(translations.modules.home.message)}
@@ -164,13 +164,18 @@ const Home: React.FC = () => {
 
   const mediaItems: MediaItem[] = [
     {
+      src: '/images/wsa-brokers-poster.png',
+      type: 'image',
+    },
+    {
       src: '/videos/background.mp4',
       type: 'video',
       posterImage: '/images/wsa-brokers-poster.png',
     },
     {
-      src: '/images/background.gif',
-      type: 'image',
+      src: '/videos/background1.mp4',
+      type: 'video',
+      posterImage: '/images/wsa-brokers-poster.png',
     },
     {
       src: '/videos/background2.mp4',
@@ -178,16 +183,24 @@ const Home: React.FC = () => {
       posterImage: '/images/wsa-brokers-poster.png',
     },
     {
-      src: '/images/background2.gif',
-      type: 'image',
+      src: '/videos/background3.mp4',
+      type: 'video',
+      posterImage: '/images/wsa-brokers-poster.png',
     },
     {
-      src: '/images/background3.gif',
-      type: 'image',
+      src: '/videos/background4.mp4',
+      type: 'video',
+      posterImage: '/images/wsa-brokers-poster.png',
     },
     {
-      src: '/images/background4.gif',
-      type: 'image',
+      src: '/videos/background5.mp4',
+      type: 'video',
+      posterImage: '/images/wsa-brokers-poster.png',
+    },
+    {
+      src: '/videos/background6.mp4',
+      type: 'video',
+      posterImage: '/images/wsa-brokers-poster.png',
     },
   ]
 
@@ -195,7 +208,7 @@ const Home: React.FC = () => {
     <DynamicBackground
       mediaItems={mediaItems}
       overlayOpacity={30}
-      playbackMode="random"
+      playbackMode="sequential"
       interval={8000}
     >
       <HomeContent />

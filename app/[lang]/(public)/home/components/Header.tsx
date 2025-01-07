@@ -79,11 +79,11 @@ const Header: React.FC = () => {
               className="flex items-center gap-2 px-3 py-2 rounded-full
                   transition-all duration-300
                   [filter:grayscale(100%)] hover:[filter:grayscale(0%)]
-                  text-gray-600 hover:text-[#FF8C00]
+                  text-[#ffffffff] hover:text-[#FF8C00]
                   bg-gray-100 hover:bg-gray-200"
             >
-              <Globe className="w-5 h-5" />
-              <span className="text-sm font-medium">
+              <Globe className="w-5 h-5 text-gray-600 hover:text-[#FF8C00]" />
+              <span className="text-sm font-medium text-gray-600 hover:text-[#FF8C00]">
                 {language === 'es'
                   ? t(translations.modules.home.spanish)
                   : t(translations.modules.home.english)}
@@ -108,7 +108,7 @@ const Header: React.FC = () => {
             <nav className="flex flex-col space-y-4 mt-16">
               {menuItems.map((item) => (
                 <Link key={item.key} href={item.href} legacyBehavior>
-                  <a className="text-gray-600 transition-colors hover:text-[#FF8C00]">
+                  <a className="text-gray-600  transition-colors hover:text-[#FF8C00]">
                     {getMenuTranslation(item.key)}
                   </a>
                 </Link>
