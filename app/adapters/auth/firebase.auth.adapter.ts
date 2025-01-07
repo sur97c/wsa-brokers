@@ -21,7 +21,11 @@ import {
   BusinessErrorCode,
 } from '@/models/errors'
 import type { SectionRole, UserRole } from '@/models/user/roles'
-import type { SessionData, SessionMetrics } from '@/models/user/types'
+import type {
+  SessionData,
+  SessionMetrics,
+  SessionValidationResult,
+} from '@/models/user/types'
 import { UserCredentials, UserProfile } from '@/models/user/user'
 import { enTranslations } from '@/translations/en'
 import { esTranslations } from '@/translations/es'
@@ -298,16 +302,16 @@ export class FirebaseAuthAdapter implements IAuthProvider {
     }
   }
 
-  async checkActiveSessions(
-    uid: string
-  ): Promise<{ canLogin: boolean; oldSession?: string }> {
+  async checkActiveSessions(uid: string): Promise<SessionValidationResult> {
     const userDoc = await adminDb.collection('users').doc(uid).get()
     const userData = userDoc.data()
+    const metrics = await this.getSessionMetrics(uid)
 
     if (userData?.allowMultipleSessions) {
-      return { canLogin: true }
+      return { canLogin: true, metrics }
     }
 
+    // Verificar si hay sesiones activas
     const activeSessions = await adminDb
       .collection('sessions')
       .where('userId', '==', uid)
@@ -315,7 +319,7 @@ export class FirebaseAuthAdapter implements IAuthProvider {
       .get()
 
     if (activeSessions.empty) {
-      return { canLogin: true }
+      return { canLogin: true, metrics }
     }
 
     // Verificar si las sesiones existentes están expiradas
@@ -334,13 +338,14 @@ export class FirebaseAuthAdapter implements IAuthProvider {
 
     // Si no hay sesiones válidas, permitir el login
     if (!hasValidSession) {
-      return { canLogin: true }
+      return { canLogin: true, metrics }
     }
 
     // Si hay una sesión válida, devolver el ID de la sesión más antigua
     return {
       canLogin: false,
       oldSession: oldestSession,
+      metrics,
     }
   }
 
@@ -487,25 +492,15 @@ export class FirebaseAuthAdapter implements IAuthProvider {
         ? JSON.parse(JSON.stringify(userData.metadata))
         : undefined,
       updatedAt: toDate(userData?.updatedAt),
-      createdAt: toDate(userData?.createdAt),
+      createdAt: toDate(userData?.createdAt) || new Date(),
       sessionId: userData?.sessionId ? String(userData.sessionId) : undefined,
       name: userData?.name ? String(userData.name) : undefined,
       lastName: userData?.lastName ? String(userData.lastName) : undefined,
-      createdBy: userData?.createdBy ? String(userData.createdBy) : undefined,
+      createdBy: userData?.createdBy ? String(userData.createdBy) : '',
+      updatedBy: userData?.updatedBy ? String(userData.updatedBy) : '',
       activeSessions: Number(userData?.activeSessions || 0),
       lastSessionCreated: toDate(userData?.lastSessionCreated),
       totalHistoricalSessions: Number(userData?.totalHistoricalSessions || 0),
-      sessionMetrics: userData?.sessionMetrics
-        ? {
-            activeSessions: Number(userData.sessionMetrics.activeSessions || 0),
-            totalHistoricalSessions: Number(
-              userData.sessionMetrics.totalHistoricalSessions || 0
-            ),
-            lastSessionCreated: toDate(
-              userData.sessionMetrics.lastSessionCreated
-            ),
-          }
-        : undefined,
     }
   }
 
@@ -586,9 +581,10 @@ export class FirebaseAuthAdapter implements IAuthProvider {
 
   async getSessionMetrics(uid: string): Promise<SessionMetrics> {
     // Métricas por defecto
-    const metrics: SessionMetrics = {
+    const metrics = {
       activeSessions: 0,
       totalHistoricalSessions: 0,
+      lastSessionCreated: undefined,
     }
 
     try {

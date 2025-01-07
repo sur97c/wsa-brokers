@@ -30,7 +30,7 @@ export function useNavigation() {
 
       return item
     })
-  }, [translations]) //, user?.primaryRole
+  }, [translations, user?.primaryRole])
 
   // Filtramos los items según los permisos del usuario
   const authorizedMenuItems = useMemo(() => {

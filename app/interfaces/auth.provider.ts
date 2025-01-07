@@ -2,9 +2,9 @@
 
 import {
   SessionInvalidationDetails,
-  SessionMetrics,
   SessionValidationResult,
   type SessionData,
+  type SessionMetrics,
 } from '@/models/user/types'
 import {
   UserCredentials,

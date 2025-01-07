@@ -93,7 +93,7 @@ export async function POST(request: Request) {
         },
         userId: session.userId as string,
         isOnline: true,
-        lastActivity: now.toISOString(),
+        lastActivity: now,
       },
     })
   } catch (error) {

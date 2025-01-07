@@ -48,14 +48,16 @@ export class AuthService {
       const sessionCheck = await this.authProvider.checkActiveSessions(user.uid)
 
       // console.log('=======> Obteniendo métricas de sesión', sessionCheck)
-      const metrics = await this.authProvider.getSessionMetrics(user.uid)
+      const metrics: SessionMetrics = await this.authProvider.getSessionMetrics(
+        user.uid
+      )
 
       // console.log(
       //   '=======> Validando sesiones activas',
       //   sessionCheck?.activeSessions
       // )
       if (
-        (!user.allowMultipleSessions && sessionCheck?.activeSessions) ||
+        (!user.allowMultipleSessions && sessionCheck?.metrics.activeSessions) ||
         0 > 0
       ) {
         return {
@@ -155,7 +157,9 @@ export class AuthService {
       return {
         ...user,
         sessionId,
-        sessionMetrics,
+        activeSessions: sessionMetrics?.activeSessions || 0,
+        lastSessionCreated: sessionMetrics?.lastSessionCreated,
+        totalHistoricalSessions: sessionMetrics?.totalHistoricalSessions || 0,
       }
     } catch (error) {
       if (sessionId) {

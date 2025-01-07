@@ -16,7 +16,7 @@ import {
 } from '@/actions/auth/server'
 import { BaseError } from '@/models/errors/base.error'
 import { UserRole, SectionRole } from '@/models/user/roles'
-import type { SerializedUserProfile, SessionMetrics } from '@/models/user/types'
+import type { SerializedUserProfile } from '@/models/user/types'
 import { UserProfile, UserCredentials } from '@/models/user/user'
 import type { RootState } from '@/redux/types'
 import type { AuthState } from './auth.types'
@@ -51,17 +51,14 @@ const serializeUser = (user: UserProfile): SerializedUserProfile => {
     sectionRoles: user.sectionRoles.map((role) => role.toString()),
     lastLogin: user.lastLogin?.toISOString(),
     lastActivity: user.lastActivity?.toISOString(),
-    createdAt: user.createdAt?.toISOString(),
+    createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt?.toISOString(),
     createdBy: user.createdBy,
     updatedBy: user.updatedBy,
-    sessionMetrics: user.sessionMetrics
-      ? {
-          ...user.sessionMetrics,
-          lastSessionCreated:
-            user.sessionMetrics.lastSessionCreated?.toISOString(),
-        }
-      : undefined,
+    sessionId: user.sessionId,
+    activeSessions: user.activeSessions,
+    lastSessionCreated: user.lastSessionCreated?.toISOString(),
+    totalHistoricalSessions: user.totalHistoricalSessions,
   }
 }
 
@@ -87,12 +84,11 @@ const selectUser = createSelector([selectAuthState], (auth: AuthState) => {
     sectionRoles: user.sectionRoles.map((role) => role as SectionRole),
     lastLogin: user.lastLogin ? new Date(user.lastLogin) : undefined,
     lastActivity: user.lastActivity ? new Date(user.lastActivity) : undefined,
-    createdAt: user.createdAt ? new Date(user.createdAt) : undefined,
+    createdAt: user.createdAt ? new Date(user.createdAt) : new Date(),
     updatedAt: user.updatedAt ? new Date(user.updatedAt) : undefined,
-    createdBy: user.createdBy ? user.createdBy : undefined,
-    updatedBy: user.updatedBy ? user.updatedBy : undefined,
+    createdBy: user.createdBy ? user.createdBy : 'undefined',
+    updatedBy: user.updatedBy ? user.updatedBy : 'undefined',
     sessionId: user.sessionId as string,
-    sessionMetrics: user.sessionMetrics as SessionMetrics,
     activeSessions: user.activeSessions as number,
     lastSessionCreated: user.lastSessionCreated
       ? new Date(user.lastSessionCreated)
