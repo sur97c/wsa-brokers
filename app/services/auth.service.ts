@@ -56,19 +56,19 @@ export class AuthService {
       //   '=======> Validando sesiones activas',
       //   sessionCheck?.activeSessions
       // )
-      if (
-        (!user.allowMultipleSessions && sessionCheck?.metrics.activeSessions) ||
-        0 > 0
-      ) {
-        return {
-          canLogin: false,
-          metrics,
-          error: {
-            code: BusinessErrorCode.ACTIVE_SESSION_EXISTS,
-            message: 'Ya existe una sesión activa para este usuario',
-          },
-        }
-      }
+      // if (
+      //   (!user.allowMultipleSessions && sessionCheck?.metrics.activeSessions) ||
+      //   0 > 0
+      // ) {
+      //   return {
+      //     canLogin: false,
+      //     metrics,
+      //     error: {
+      //       code: BusinessErrorCode.ACTIVE_SESSION_EXISTS,
+      //       message: 'Ya existe una sesión activa para este usuario',
+      //     },
+      //   }
+      // }
 
       // console.log('======> Regresando con éxito', metrics)
       return {
