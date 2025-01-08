@@ -115,10 +115,20 @@ export class AuthService {
     let user: UserProfile | undefined
 
     // 1. Validación inicial del correo
+    console.info(`AuthService::login:Validación inicial del correo`, {
+      isOnline: true,
+      lastLogin: new Date(),
+      lastActivity: new Date(),
+      sessionId,
+    })
     const preLoginCheck = await this.validatePreLoginConditions(
       credentials.email
     )
 
+    console.info(
+      `AuthService::login:Validación inicial del correo`,
+      JSON.stringify(preLoginCheck)
+    )
     if (!preLoginCheck.canLogin) {
       throw new BusinessError(
         preLoginCheck.error?.message || 'No se puede iniciar sesión',
@@ -128,18 +138,33 @@ export class AuthService {
 
     try {
       // 2. Login básico que ahora incluye la sincronización de roles
+      console.info(
+        `AuthService::login:Login básico que ahora incluye la sincronización de roles`,
+        credentials
+      )
       user = await this.authProvider.login(credentials)
 
       // 3. Ya no necesitamos llamar a syncUserRoles aquí porque ya se hizo en el adapter
       // await this.syncUserRoles(user.uid)
 
+      console.info(
+        `AuthService::login:Creación de sesión`,
+        user.sectionRoles,
+        user.uid,
+        credentials.rememberMe || false
+      )
       // 4. Creación de sesión
       sessionId = await this.authProvider.createSession(
         user.uid,
         credentials.rememberMe || false
       )
-
       // 5. Actualización de actividad
+      console.info(`AuthService::login:Actualización de actividad`, {
+        isOnline: true,
+        lastLogin: new Date(),
+        lastActivity: new Date(),
+        sessionId,
+      })
       await this.authProvider.updateUserActivity(user.uid, {
         isOnline: true,
         lastLogin: new Date(),
@@ -150,7 +175,7 @@ export class AuthService {
       sessionMetrics = preLoginCheck.metrics
       if (sessionMetrics && sessionMetrics.activeSessions > 0) {
         console.warn(
-          `Usuario ${user.uid} tiene ${sessionMetrics.activeSessions} sesiones activas`
+          `AuthService::login:Usuario ${user.uid} tiene ${sessionMetrics.activeSessions} sesiones activas`
         )
       }
 
@@ -162,6 +187,7 @@ export class AuthService {
         totalHistoricalSessions: sessionMetrics?.totalHistoricalSessions || 0,
       }
     } catch (error) {
+      console.error(`AuthService::login:Error`, error)
       const baseError = error as BaseError
       throw new BusinessError(
         baseError.message,
