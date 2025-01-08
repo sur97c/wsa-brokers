@@ -32,6 +32,7 @@ const LoadingButton: React.FC<LoadingButtonProps> = ({
       className={`bg-primary py-2 px-4 rounded hover:bg-primary-hover w-full md:w-auto ${className}`}
       disabled={loading}
     >
+      {label && <span className="mr-2">{label}</span>}
       {loading ? (
         <FontAwesomeIcon icon={faSpinner} spin />
       ) : (
