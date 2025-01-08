@@ -1,5 +1,6 @@
 // app/[lang]/(public)/home/Home.tsx
 
+import { faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { clsx } from 'clsx'
 import React, { useState } from 'react'
 
@@ -8,6 +9,7 @@ import RecoveryForm from '@/components/auth/RecoveryForm'
 import VerificationForm from '@/components/auth/VerificationForm'
 import type { MediaItem } from '@/components/background/background'
 import { DynamicBackground } from '@/components/background/DynamicBackground'
+import LoadingButton from '@/components/ui/buttons/LoadingButton'
 import {
   FlipCard,
   type BackContentType,
@@ -25,7 +27,9 @@ const Home: React.FC = () => {
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [backContent, setBackContent] = useState<BackContentType>('recovery')
   const [verificationEmail, setVerificationEmail] = useState<string>('')
-  const { user, isAuthenticated } = useAppSelector((state) => state.auth)
+  const { user, isAuthenticated, loading } = useAppSelector(
+    (state) => state.auth
+  )
 
   const handleLoginClick = (type: BackContentType = 'recovery') => {
     setBackContent(type)
@@ -95,16 +99,31 @@ const Home: React.FC = () => {
             >
               {t(translations.modules.home.message)}
             </p>
-            <button
+            {/* <button
               onClick={() => handleLoginClick()}
               className="px-6 py-2 bg-gray-800 text-white rounded transition-all duration-500
                 [filter:grayscale(100%)] hover:[filter:grayscale(0%)]
                 hover:bg-[#FF8C00] hover:shadow-lg transform hover:-translate-y-0.5
                 shadow-md hover:shadow-[#FF8C00]/20"
             >
-              {isAuthenticated && user && 'Dashboard'}
-              {!isAuthenticated && t(translations.modules.home.login)}
-            </button>
+              {loading && t(translations.core.loading.accessGranted)} */}
+            <LoadingButton
+              faIcon={faArrowRight}
+              loading={loading}
+              label={
+                loading
+                  ? t(translations.core.loading.accessGranted)
+                  : isAuthenticated && user
+                    ? user.email
+                    : t(translations.modules.home.login)
+              }
+              onClick={() => handleLoginClick()}
+              className="px-6 py-2 bg-gray-800 text-white rounded transition-all duration-500
+                [filter:grayscale(100%)] hover:[filter:grayscale(0%)]
+                hover:bg-[#FF8C00] hover:shadow-lg transform hover:-translate-y-0.5
+                shadow-md hover:shadow-[#FF8C00]/20"
+            />
+            {/* </button> */}
           </section>
 
           <div className="relative">

@@ -33,23 +33,23 @@ const PROTECTED_PATHS: Record<string, SectionRole[]> = {
 
 export async function middleware(request: NextRequest) {
   logger.log('====== MIDDLEWARE START ======')
-  logger.log('🔒 Request URL:', request.url)
+  logger.log('Request URL:', request.url)
 
   const pathname = request.nextUrl.pathname
   const pathWithoutLang = pathname.replace(/^\/[a-z]{2}/, '')
 
-  logger.log('📍 Checking path:', pathWithoutLang)
+  logger.log('Checking path:', pathWithoutLang)
 
   if (!pathWithoutLang.startsWith('/app/')) {
     logger.log('⚪ Not a protected route')
     return NextResponse.next()
   }
 
-  logger.log('🛡️ Protected route detected')
+  logger.log('Protected route detected')
   const sessionId = request.cookies.get('sessionId')
 
   if (!sessionId?.value) {
-    logger.log('❌ No session found')
+    logger.log('No session found')
     return redirectToLogin(request)
   }
 
@@ -68,11 +68,11 @@ export async function middleware(request: NextRequest) {
     const result = (await response.json()) as SessionResponse
 
     if (!result.valid) {
-      logger.log('❌ Session validation failed:', result.error)
+      logger.log('Session validation failed:', result.error)
       return handleInvalidSession(request)
     }
 
-    logger.log('✅ Session validated')
+    logger.log('Session validated')
 
     const protectedRoute = Object.keys(PROTECTED_PATHS).find((route) =>
       pathWithoutLang.startsWith(route)
@@ -83,7 +83,7 @@ export async function middleware(request: NextRequest) {
       const userSectionRoles = result.data?.roles.sectionRoles
 
       if (!hasRequiredSectionRoles(userSectionRoles || [], requiredRoles)) {
-        logger.log('❌ User lacks required sectionRoles:', {
+        logger.log('User lacks required sectionRoles:', {
           required: requiredRoles,
           userSectionRoles,
         })
@@ -91,10 +91,10 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    logger.log('✅ Access granted')
+    logger.log('Access granted')
     return NextResponse.next()
   } catch (error) {
-    logger.error('❌ Middleware error:', error)
+    logger.error('Middleware error:', error)
     return handleInvalidSession(request)
   }
 }
