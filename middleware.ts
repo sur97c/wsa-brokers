@@ -4,44 +4,58 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // 1. Log básico de información de la request
-  console.log({
-    url: request.url,
-    method: request.method,
-    pathname: request.nextUrl.pathname,
-    headers: Object.fromEntries(request.headers.entries()),
-    cookies: Object.fromEntries(request.cookies.getAll().entries()),
-  })
+  // Usando console.warn para asegurar que se muestren los logs
+  console.warn('=== MIDDLEWARE START ===')
+  console.warn('Request URL:', request.url)
+  console.warn('Method:', request.method)
+  console.warn('Pathname:', request.nextUrl.pathname)
 
   const pathname = request.nextUrl.pathname
 
-  // 2. Solo verificamos si es ruta protegida
+  // Si es una petición OPTIONS, permitirla
+  if (request.method === 'OPTIONS') {
+    console.warn('OPTIONS request detected, allowing')
+    return new NextResponse(null, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Origin': '*',
+      },
+    })
+  }
+
   if (!pathname.includes('/app/')) {
+    console.warn('Not a protected route, proceeding')
     return NextResponse.next()
   }
 
-  // 3. Verificación mínima de sesión
   const sessionId = request.cookies.get('sessionId')
+  console.warn('Session ID:', sessionId?.value)
+
   if (!sessionId?.value) {
-    console.log('No session found, redirecting to login')
+    console.warn('No session found, redirecting to login')
     return redirectToLogin(request)
   }
 
-  // 4. Log de información de sesión
-  console.log('Session found:', sessionId.value)
-
-  // 5. Por ahora, permitimos el acceso sin validación
+  console.warn('=== MIDDLEWARE END ===')
   return NextResponse.next()
 }
 
 function redirectToLogin(request: NextRequest) {
   const url = new URL('/login', request.url)
   url.searchParams.set('redirect', request.nextUrl.pathname)
+  console.warn('Redirecting to:', url.toString())
   return NextResponse.redirect(url)
 }
 
+// Ajustando el matcher para incluir OPTIONS
 export const config = {
-  matcher: ['/app/:path*', '/:lang/app/:path*'],
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/app/:path*',
+    '/:lang/app/:path*',
+  ],
 }
 
 // import { NextResponse } from 'next/server'
