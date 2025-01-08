@@ -1,20 +1,58 @@
 // middleware.ts
 
+import { SectionRole } from '@/models/user/roles'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+const PROTECTED_PATHS: Record<string, SectionRole[]> = {
+  '/app/payments': [SectionRole.PAYMENTS],
+  '/app/quotes': [SectionRole.QUOTES],
+  '/app/policies': [SectionRole.POLICIES],
+  '/app/claims': [SectionRole.CLAIMS],
+  '/app/reports': [SectionRole.REPORTS],
+  '/app/clients': [SectionRole.CLIENTS],
+  '/app/management': [SectionRole.USER_MANAGEMENT, SectionRole.ROLE_MANAGEMENT],
+  '/app/dashboard': [SectionRole.DASHBOARD],
+} as const
+
+const interpolateMessage = (
+  message: string,
+  values: Record<string, unknown>
+): string => {
+  return message.replace(/\{([^}]+)\}/g, (_, key) => {
+    const value = values[key]
+    return value === undefined || value === null ? 'NO_VALUE' : String(value)
+  })
+}
+
+const logMessage = async (message: string, values: Record<string, unknown>) => {
+  await new Promise((resolve) => setTimeout(resolve, 100))
+  console.log(interpolateMessage(message, values))
+}
+
 export async function middleware(request: NextRequest) {
-  // Usando console.warn para asegurar que se muestren los logs
-  console.warn('=== MIDDLEWARE START ===')
-  console.warn('Request URL:', request.url)
-  console.warn('Method:', request.method)
-  console.warn('Pathname:', request.nextUrl.pathname)
-
   const pathname = request.nextUrl.pathname
+  const pathWithoutLang = pathname.replace(/^\/[a-z]{2}/, '')
 
-  // Si es una petición OPTIONS, permitirla
+  await logMessage('=== MIDDLEWARE START ===', {})
+  await logMessage('middleware::Request URL: {url}', { url: request.url })
+  await logMessage('middleware::Method: {method}', { method: request.method })
+  await logMessage('middleware::Pathname: {pathname}', {
+    pathname: pathname,
+  })
+  await logMessage('middleware::Path without lang: {pathWithoutLang}', {
+    pathWithoutLang: pathWithoutLang,
+  })
+
+  if (!pathWithoutLang.startsWith('/app/')) {
+    logMessage('⚪ middleware::{pathWithoutLang} Not a protected route', {
+      pathWithoutLang: pathWithoutLang,
+    })
+    return NextResponse.next()
+  }
+
   if (request.method === 'OPTIONS') {
-    console.warn('OPTIONS request detected, allowing')
+    await logMessage('middleware::OPTIONS request detected, allowing', {})
     return new NextResponse(null, {
       status: 200,
       headers: {
@@ -25,21 +63,80 @@ export async function middleware(request: NextRequest) {
     })
   }
 
-  if (!pathname.includes('/app/')) {
-    console.warn('Not a protected route, proceeding')
-    return NextResponse.next()
-  }
-
   const sessionId = request.cookies.get('sessionId')
-  console.warn('Session ID:', sessionId?.value)
+  await logMessage('middleware::Session ID: {sessionId}', {
+    sessionId: sessionId?.value,
+  })
 
   if (!sessionId?.value) {
-    console.warn('No session found, redirecting to login')
+    await logMessage('middleware::No session found, redirecting to login', {})
     return redirectToLogin(request)
   }
 
-  console.warn('=== MIDDLEWARE END ===')
+  const protectedRoute = Object.keys(PROTECTED_PATHS).find((route) =>
+    pathWithoutLang.startsWith(route)
+  )
+  await logMessage('middleware::Protected route: {protectedRoute}', {
+    protectedRoute: protectedRoute,
+  })
+
+  if (protectedRoute) {
+    const requiredRoles = PROTECTED_PATHS[protectedRoute]
+    await logMessage('middleware::Required roles: {requiredRoles}', {
+      requiredRoles: requiredRoles,
+    })
+    const response = await fetch(
+      `${request.nextUrl.origin}/api/session/validate`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sessionId: sessionId.value }),
+      }
+    )
+
+    const result = await response.json()
+    await logMessage('middleware::Session validation result: {result}', {
+      result: result,
+    })
+
+    if (!result.valid) {
+      await logMessage(
+        'middleware::Session validation failed, redirecting to login',
+        {}
+      )
+      return redirectToLogin(request)
+    }
+
+    const userSectionRoles = result.data?.roles.sectionRoles
+    await logMessage('middleware::User section roles: {userSectionRoles}', {
+      userSectionRoles: userSectionRoles,
+    })
+
+    if (!hasRequiredSectionRoles(userSectionRoles || [], requiredRoles)) {
+      await logMessage(
+        'middleware::User lacks required section roles, redirecting to unauthorized',
+        {}
+      )
+      return NextResponse.redirect(new URL('/unauthorized', request.url))
+    }
+  }
+
+  await logMessage('middleware::Access granted', {})
+  await logMessage('=== MIDDLEWARE END ===', {})
   return NextResponse.next()
+}
+
+function hasRequiredSectionRoles(
+  userRoles: string[],
+  requiredRoles: readonly string[]
+): boolean {
+  return (
+    Array.isArray(userRoles) &&
+    Array.isArray(requiredRoles) &&
+    requiredRoles.some((role) => userRoles.includes(role))
+  )
 }
 
 function redirectToLogin(request: NextRequest) {
@@ -52,7 +149,7 @@ function redirectToLogin(request: NextRequest) {
 // Ajustando el matcher para incluir OPTIONS
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    // '/((?!api|_next/static|_next/image|favicon.ico).*)',
     '/app/:path*',
     '/:lang/app/:path*',
   ],
@@ -64,30 +161,6 @@ export const config = {
 // import type { SessionResponse } from '@/models/session/types'
 
 // const isDev = process.env.NODE_ENV === 'development'
-
-// const logger = {
-//   log: (...args: unknown[]) => {
-//     if (isDev) {
-//       console.log(...args)
-//     }
-//   },
-//   error: (...args: unknown[]) => {
-//     if (isDev) {
-//       console.error(...args)
-//     }
-//   },
-// }
-
-// const PROTECTED_PATHS: Record<string, SectionRole[]> = {
-//   '/app/payments': [SectionRole.PAYMENTS],
-//   '/app/quotes': [SectionRole.QUOTES],
-//   '/app/policies': [SectionRole.POLICIES],
-//   '/app/claims': [SectionRole.CLAIMS],
-//   '/app/reports': [SectionRole.REPORTS],
-//   '/app/clients': [SectionRole.CLIENTS],
-//   '/app/management': [SectionRole.USER_MANAGEMENT, SectionRole.ROLE_MANAGEMENT],
-//   '/app/dashboard': [SectionRole.DASHBOARD],
-// } as const
 
 // export async function middleware(request: NextRequest) {
 //   logger.log('====== MIDDLEWARE START ======')
