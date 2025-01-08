@@ -115,7 +115,7 @@ export class AuthService {
     let user: UserProfile | undefined
 
     // 1. Validación inicial del correo
-    console.info(`AuthService::login:Validación inicial del correo`, {
+    console.warn(`AuthService::login:Validación inicial del correo`, {
       isOnline: true,
       lastLogin: new Date(),
       lastActivity: new Date(),
@@ -125,7 +125,7 @@ export class AuthService {
       credentials.email
     )
 
-    console.info(
+    console.warn(
       `AuthService::login:Validación inicial del correo`,
       JSON.stringify(preLoginCheck)
     )
@@ -138,7 +138,7 @@ export class AuthService {
 
     try {
       // 2. Login básico que ahora incluye la sincronización de roles
-      console.info(
+      console.warn(
         `AuthService::login:Login básico que ahora incluye la sincronización de roles`,
         credentials
       )
@@ -147,7 +147,7 @@ export class AuthService {
       // 3. Ya no necesitamos llamar a syncUserRoles aquí porque ya se hizo en el adapter
       // await this.syncUserRoles(user.uid)
 
-      console.info(
+      console.warn(
         `AuthService::login:Creación de sesión`,
         user.sectionRoles,
         user.uid,
@@ -159,7 +159,7 @@ export class AuthService {
         credentials.rememberMe || false
       )
       // 5. Actualización de actividad
-      console.info(`AuthService::login:Actualización de actividad`, {
+      console.warn(`AuthService::login:Actualización de actividad`, {
         isOnline: true,
         lastLogin: new Date(),
         lastActivity: new Date(),
