@@ -12,6 +12,7 @@ import {
   type SessionMetrics,
 } from '@/models/user/types'
 import { UserCredentials, UserProfile } from '@/models/user/user'
+import { logMessage } from '@/utils/logger/logger'
 
 interface RoleSyncOptions {
   sourceOfTruth: 'primary' | 'secondary'
@@ -76,9 +77,11 @@ export class AuthService {
         metrics,
       }
     } catch (error) {
-      console.log(
-        '=======> Error al validar condiciones de inicio de sesión:',
-        error
+      await logMessage(
+        'AuthService::validatePreLoginConditions: Error al validar condiciones de inicio de sesión: {error}',
+        {
+          error,
+        }
       )
       const baseError = error as BaseError
       throw new BusinessError(
@@ -94,7 +97,10 @@ export class AuthService {
         sourceOfTruth: this.rolesSyncConfig.sourceOfTruth,
       })
     } catch (error) {
-      console.error('Error sincronizando roles:', error)
+      await logMessage(
+        'AuthService::syncUserRoles: Error al sincronizar roles: {error}',
+        { error }
+      )
       throw new BusinessError(
         'Error al sincronizar roles de usuario',
         BusinessErrorCode.ROLE_SYNC_ERROR
@@ -115,19 +121,22 @@ export class AuthService {
     let user: UserProfile | undefined
 
     // 1. Validación inicial del correo
-    console.warn(`AuthService::login:Validación inicial del correo`, {
-      isOnline: true,
-      lastLogin: new Date(),
-      lastActivity: new Date(),
-      sessionId,
-    })
+    await logMessage(
+      `AuthService::login:Validación inicial del correo isOnline: {isOnline}, lastLogin: {lastLogin}, lastActivity: {lastActivity}, sessionId: {sessionId}`,
+      {
+        isOnline: true,
+        lastLogin: new Date(),
+        lastActivity: new Date(),
+        sessionId,
+      }
+    )
     const preLoginCheck = await this.validatePreLoginConditions(
       credentials.email
     )
 
-    console.warn(
-      `AuthService::login:Validación inicial del correo`,
-      JSON.stringify(preLoginCheck)
+    await logMessage(
+      'AuthService::login:Validación inicial del correo {preLoginCheck}',
+      { preLoginCheck }
     )
     if (!preLoginCheck.canLogin) {
       throw new BusinessError(
@@ -138,20 +147,22 @@ export class AuthService {
 
     try {
       // 2. Login básico que ahora incluye la sincronización de roles
-      console.warn(
-        `AuthService::login:Login básico que ahora incluye la sincronización de roles`,
-        credentials
+      await logMessage(
+        `AuthService::login: Login básico que ahora incluye la sincronización de roles {credentials}`,
+        { credentials }
       )
       user = await this.authProvider.login(credentials)
 
       // 3. Ya no necesitamos llamar a syncUserRoles aquí porque ya se hizo en el adapter
       // await this.syncUserRoles(user.uid)
 
-      console.warn(
-        `AuthService::login:Creación de sesión`,
-        user.sectionRoles,
-        user.uid,
-        credentials.rememberMe || false
+      await logMessage(
+        'AuthService::login:Creación de sesión user: {user}, uid: {uid}, rememberMe: {rememberMe}',
+        {
+          user: user.sectionRoles,
+          uid: user.uid,
+          rememberMe: credentials.rememberMe || false,
+        }
       )
       // 4. Creación de sesión
       sessionId = await this.authProvider.createSession(
@@ -159,7 +170,7 @@ export class AuthService {
         credentials.rememberMe || false
       )
       // 5. Actualización de actividad
-      console.warn(`AuthService::login:Actualización de actividad`, {
+      await logMessage(`AuthService::login:Actualización de actividad`, {
         isOnline: true,
         lastLogin: new Date(),
         lastActivity: new Date(),
@@ -174,8 +185,12 @@ export class AuthService {
 
       sessionMetrics = preLoginCheck.metrics
       if (sessionMetrics && sessionMetrics.activeSessions > 0) {
-        console.warn(
-          `AuthService::login:Usuario ${user.uid} tiene ${sessionMetrics.activeSessions} sesiones activas`
+        await logMessage(
+          'AuthService::login:Usuario {uid} tiene {activeSessions} sesiones activas',
+          {
+            uid: user.uid,
+            activeSessions: sessionMetrics.activeSessions,
+          }
         )
       }
 
@@ -187,7 +202,7 @@ export class AuthService {
         totalHistoricalSessions: sessionMetrics?.totalHistoricalSessions || 0,
       }
     } catch (error) {
-      console.error(`AuthService::login:Error`, error)
+      await logMessage(`AuthService::login:Error {error}`, { error })
       const baseError = error as BaseError
       throw new BusinessError(
         baseError.message,
@@ -227,7 +242,7 @@ export class AuthService {
         !session.isActive ||
         new Date(session.expiresAt) < new Date()
       ) {
-        console.warn('Sesión inválida:', {
+        await logMessage('Sesión inválida:', {
           exists: !!session,
           isActive: session?.isActive,
           expiresAt: session?.expiresAt,
@@ -251,14 +266,14 @@ export class AuthService {
         lastActivity: new Date(),
         isOnline: true,
       })
-      console.log('Actividad actualizada')
+      await logMessage('Actividad actualizada', {})
 
       return {
         ...user,
         sessionId,
       }
     } catch (error: unknown) {
-      console.error('Error en validateSession:', error)
+      await logMessage('Error en validateSession: {error}', { error })
       const baseError = error as { message: string; code?: string }
       throw new BusinessError(
         baseError.message || 'Error al validar la sesión',

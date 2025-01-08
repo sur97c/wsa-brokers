@@ -1,4 +1,4 @@
-// // app/utils/logger/logger.ts
+// app/utils/logger/logger.ts
 
 // import { LogLevel, LogEntry, LoggerConfig } from './types'
 // import { LogCompressor } from './compression'
@@ -7,6 +7,24 @@
 // import { LoggerMetrics, type LogMetrics } from './metrics'
 // import { LogFilterEngine, type LogFilter } from './filters'
 // import { LogExporter, type ExportOptions } from './exporters'
+
+const interpolateMessage = (
+  message: string,
+  values: Record<string, unknown>
+): string => {
+  return message.replace(/\{([^}]+)\}/g, (_, key) => {
+    const value = values[key]
+    return value === undefined || value === null ? 'NO_VALUE' : String(value)
+  })
+}
+
+export const logMessage = async (
+  message: string,
+  values: Record<string, unknown>
+) => {
+  await new Promise((resolve) => setTimeout(resolve, 100))
+  console.log(interpolateMessage(message, values))
+}
 
 // export class Logger {
 //   private metrics: LoggerMetrics

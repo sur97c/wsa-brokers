@@ -1,6 +1,7 @@
 // middleware.ts
 
 import { SectionRole } from '@/models/user/roles'
+import { logMessage } from '@/utils/logger/logger'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -14,21 +15,6 @@ const PROTECTED_PATHS: Record<string, SectionRole[]> = {
   '/app/management': [SectionRole.USER_MANAGEMENT, SectionRole.ROLE_MANAGEMENT],
   '/app/dashboard': [SectionRole.DASHBOARD],
 } as const
-
-const interpolateMessage = (
-  message: string,
-  values: Record<string, unknown>
-): string => {
-  return message.replace(/\{([^}]+)\}/g, (_, key) => {
-    const value = values[key]
-    return value === undefined || value === null ? 'NO_VALUE' : String(value)
-  })
-}
-
-const logMessage = async (message: string, values: Record<string, unknown>) => {
-  await new Promise((resolve) => setTimeout(resolve, 100))
-  console.log(interpolateMessage(message, values))
-}
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
@@ -110,9 +96,13 @@ export async function middleware(request: NextRequest) {
     }
 
     const userSectionRoles = result.data?.roles.sectionRoles
-    await logMessage('middleware::User section roles: {userSectionRoles}', {
-      userSectionRoles: userSectionRoles,
-    })
+    await logMessage(
+      'middleware::User section requiredRoles: {requiredRoles}, userSectionRoles: {userSectionRoles}',
+      {
+        userSectionRoles: userSectionRoles,
+        requiredRoles: requiredRoles,
+      }
+    )
 
     if (!hasRequiredSectionRoles(userSectionRoles || [], requiredRoles)) {
       await logMessage(
@@ -139,10 +129,12 @@ function hasRequiredSectionRoles(
   )
 }
 
-function redirectToLogin(request: NextRequest) {
+const redirectToLogin = async (request: NextRequest) => {
   const url = new URL('/login', request.url)
   url.searchParams.set('redirect', request.nextUrl.pathname)
-  console.warn('Redirecting to:', url.toString())
+  await logMessage('middleware::redirectToLogin, redirect to {pathname}', {
+    pathname: url.toString(),
+  })
   return NextResponse.redirect(url)
 }
 
