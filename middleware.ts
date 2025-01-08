@@ -74,22 +74,22 @@ export async function middleware(request: NextRequest) {
 
     logger.log('Session validated')
 
-    const protectedRoute = Object.keys(PROTECTED_PATHS).find((route) =>
-      pathWithoutLang.startsWith(route)
-    )
+    // const protectedRoute = Object.keys(PROTECTED_PATHS).find((route) =>
+    //   pathWithoutLang.startsWith(route)
+    // )
 
-    if (protectedRoute) {
-      const requiredRoles = PROTECTED_PATHS[protectedRoute]
-      const userSectionRoles = result.data?.roles.sectionRoles
+    // if (protectedRoute) {
+    //   const requiredRoles = PROTECTED_PATHS[protectedRoute]
+    //   const userSectionRoles = result.data?.roles.sectionRoles
 
-      if (!hasRequiredSectionRoles(userSectionRoles || [], requiredRoles)) {
-        logger.log('User lacks required sectionRoles:', {
-          required: requiredRoles,
-          userSectionRoles,
-        })
-        return NextResponse.redirect(new URL('/unauthorized', request.url))
-      }
-    }
+    //   if (!hasRequiredSectionRoles(userSectionRoles || [], requiredRoles)) {
+    //     logger.log('User lacks required sectionRoles:', {
+    //       required: requiredRoles,
+    //       userSectionRoles,
+    //     })
+    //     return NextResponse.redirect(new URL('/unauthorized', request.url))
+    //   }
+    // }
 
     logger.log('Access granted')
     return NextResponse.next()
