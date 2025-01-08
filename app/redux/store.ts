@@ -6,9 +6,9 @@ import storage from 'redux-persist/lib/storage'
 
 import { reduxMiddleware } from '@/redux/middleware'
 
+import { logMessage } from '@/utils/logger/logger'
 import noopStorage from './noopStorage'
 import authReducer from './slices/auth.slice'
-import { logMessage } from '@/utils/logger/logger'
 
 const isClient = typeof window !== 'undefined'
 
