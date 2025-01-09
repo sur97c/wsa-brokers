@@ -1,24 +1,11 @@
 // middleware.ts
 
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
 import { SectionRole } from '@/models/user/roles'
 import type { SessionResponse } from '@/models/session/types'
-
-const isDev = process.env.NODE_ENV === 'development'
-
-const logger = {
-  log: (...args: unknown[]) => {
-    if (isDev) {
-      console.log(...args)
-    }
-  },
-  error: (...args: unknown[]) => {
-    if (isDev) {
-      console.error(...args)
-    }
-  },
-}
+import { logMessage } from '@/utils/logger/logger'
+import { LogLevel } from '@/utils/logger/types'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 const PROTECTED_PATHS: Record<string, SectionRole[]> = {
   '/app/payments': [SectionRole.PAYMENTS],
@@ -32,24 +19,24 @@ const PROTECTED_PATHS: Record<string, SectionRole[]> = {
 } as const
 
 export async function middleware(request: NextRequest) {
-  logger.log('====== MIDDLEWARE START ======')
-  logger.log('Request URL:', request.url)
+  await logMessage('====== MIDDLEWARE START ======')
+  await logMessage('Request URL: {url}', { url: request.url })
 
   const pathname = request.nextUrl.pathname
   const pathWithoutLang = pathname.replace(/^\/[a-z]{2}/, '')
 
-  logger.log('Checking path:', pathWithoutLang)
+  await logMessage('Checking path: {path}', { path: pathWithoutLang })
 
   if (!pathWithoutLang.startsWith('/app/')) {
-    logger.log('⚪ Not a protected route')
+    await logMessage('⚪ Not a protected route')
     return NextResponse.next()
   }
 
-  logger.log('Protected route detected')
+  await logMessage('Protected route detected')
   const sessionId = request.cookies.get('sessionId')
 
   if (!sessionId?.value) {
-    logger.log('No session found')
+    await logMessage('No session found')
     return redirectToLogin(request)
   }
 
@@ -68,11 +55,11 @@ export async function middleware(request: NextRequest) {
     const result = (await response.json()) as SessionResponse
 
     if (!result.valid) {
-      logger.log('Session validation failed:', result.error)
+      await logMessage('Session validation failed:', result.error)
       return handleInvalidSession(request)
     }
 
-    logger.log('Session validated')
+    await logMessage('Session validated')
 
     const protectedRoute = Object.keys(PROTECTED_PATHS).find((route) =>
       pathWithoutLang.startsWith(route)
@@ -83,19 +70,24 @@ export async function middleware(request: NextRequest) {
       const userSectionRoles = result.data?.roles.sectionRoles
 
       if (!hasRequiredSectionRoles(userSectionRoles || [], requiredRoles)) {
-        logger.log('User lacks required sectionRoles:', {
-          required: requiredRoles,
-          userSectionRoles,
-        })
+        await logMessage(
+          'User lacks required sectionRoles: {required}, {userSectionRoles}',
+          {
+            required: requiredRoles,
+            userSectionRoles,
+          }
+        )
         return NextResponse.redirect(new URL('/unauthorized', request.url))
       }
     }
 
-    logger.log('Access granted')
+    await logMessage('Access granted')
     return NextResponse.next()
   } catch (error) {
-    logger.error('Middleware error:', error)
+    await logMessage('Middleware error: {error}', { error }, LogLevel.ERROR)
     return handleInvalidSession(request)
+  } finally {
+    await logMessage('====== MIDDLEWARE END ======')
   }
 }
 

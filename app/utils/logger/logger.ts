@@ -1,4 +1,4 @@
-// // app/utils/logger/logger.ts
+// app/utils/logger/logger.ts
 
 // import { LogLevel, LogEntry, LoggerConfig } from './types'
 // import { LogCompressor } from './compression'
@@ -7,6 +7,68 @@
 // import { LoggerMetrics, type LogMetrics } from './metrics'
 // import { LogFilterEngine, type LogFilter } from './filters'
 // import { LogExporter, type ExportOptions } from './exporters'
+
+import { LogLevel } from './types'
+
+const interpolateMessage = (
+  message: string,
+  values: Record<string, unknown>
+): string => {
+  return message.replace(/\{([^}]+)\}/g, (_, key) => {
+    const value = values[key]
+    return value === undefined || value === null ? 'NO_VALUE' : String(value)
+  })
+}
+
+type LogMessageFunction = {
+  (message: string): Promise<void>
+  (message: string, values: Record<string, unknown>): Promise<void>
+  (message: string, level: LogLevel): Promise<void>
+  (
+    message: string,
+    values: Record<string, unknown>,
+    level: LogLevel
+  ): Promise<void>
+}
+
+export const logMessage: LogMessageFunction = async (
+  message: string,
+  valuesOrLevel?: Record<string, unknown> | LogLevel,
+  level?: LogLevel
+) => {
+  let finalValues: Record<string, unknown> = {}
+  let finalLevel = LogLevel.INFO
+
+  if (valuesOrLevel) {
+    if (typeof valuesOrLevel === 'object') {
+      finalValues = valuesOrLevel
+      if (level) finalLevel = level
+    } else {
+      finalLevel = valuesOrLevel
+    }
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 100))
+  const interpolatedMessage = interpolateMessage(message, finalValues)
+
+  switch (finalLevel) {
+    case LogLevel.DEBUG:
+      console.debug(interpolatedMessage)
+      break
+    case LogLevel.INFO:
+      console.info(interpolatedMessage)
+      break
+    case LogLevel.WARN:
+      console.warn(interpolatedMessage)
+      break
+    case LogLevel.ERROR:
+      console.error(interpolatedMessage)
+      break
+    default:
+      console.log(interpolatedMessage)
+      break
+  }
+}
 
 // export class Logger {
 //   private metrics: LoggerMetrics

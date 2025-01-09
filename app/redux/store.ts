@@ -6,12 +6,13 @@ import storage from 'redux-persist/lib/storage'
 
 import { reduxMiddleware } from '@/redux/middleware'
 
+import { logMessage } from '@/utils/logger/logger'
 import noopStorage from './noopStorage'
 import authReducer from './slices/auth.slice'
 
 const isClient = typeof window !== 'undefined'
 
-const isLocalStorageAvailable = () => {
+const isLocalStorageAvailable = async () => {
   if (!isClient) return false
 
   try {
@@ -20,14 +21,17 @@ const isLocalStorageAvailable = () => {
     window.localStorage.removeItem(testKey)
     return true
   } catch (e) {
-    console.warn('Local storage is not available', e)
+    await logMessage('Local storage is not available error {error}', {
+      error: e,
+    })
     return false
   }
 }
 
 const persistConfig = {
   key: 'root',
-  storage: isClient && isLocalStorageAvailable() ? storage : noopStorage,
+  storage:
+    isClient && (await isLocalStorageAvailable()) ? storage : noopStorage,
   // Podemos agregar configuraciones adicionales aquí
   whitelist: ['auth'], // Solo persistir el estado de autenticación
 }
