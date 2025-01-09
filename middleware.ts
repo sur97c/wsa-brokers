@@ -39,11 +39,20 @@ async function validateSession(
 
     const textResponse = await response.text()
 
-    await logMessage('Validate Session Response:', {
+    await logMessage('Validate Session Response >> Status: {status}', {
       status: response.status,
-      headers: Object.fromEntries(response.headers.entries()),
-      rawResponse: textResponse,
     })
+
+    await logMessage('Validate Session Response >> Headers: {headers}', {
+      headers: Object.fromEntries(response.headers.entries()),
+    })
+
+    await logMessage(
+      'Validate Session Response >> RawResponse: {rawResponse}',
+      {
+        rawResponse: textResponse,
+      }
+    )
 
     if (!textResponse) {
       return {
