@@ -27,80 +27,102 @@ export async function middleware(request: NextRequest) {
 
   await logMessage('Checking path: {path}', { path: pathWithoutLang })
 
-  // if (!pathWithoutLang.startsWith('/app/')) {
-  //   await logMessage('⚪ Not a protected route')
-  return NextResponse.next()
-  // }
+  if (!pathWithoutLang.startsWith('/app/')) {
+    await logMessage('⚪ Not a protected route')
+    return NextResponse.next()
+  }
 
-  // await logMessage('Protected route detected')
-  // const sessionId = request.cookies.get('sessionId')
+  await logMessage('Protected route detected')
+  const sessionId = request.cookies.get('sessionId')
 
-  // if (!sessionId?.value) {
-  //   await logMessage('No session found')
-  //   return redirectToLogin(request)
-  // }
+  if (!sessionId?.value) {
+    await logMessage('No session found')
+    return redirectToLogin(request)
+  }
 
-  // try {
-  //   const response = await fetch(
-  //     `${request.nextUrl.origin}/api/session/validate`,
-  //     {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({ sessionId: sessionId.value }),
-  //     }
-  //   )
+  await logMessage(
+    'Checking session: {sessionId}, service: {service}/api/session/validate',
+    {
+      sessionId: request.cookies.get('sessionId')?.value,
+      service: request.nextUrl.origin,
+    }
+  )
 
-  //   const result = (await response.json()) as SessionResponse
+  try {
+    const response = await fetch(
+      `${request.nextUrl.origin}/api/session/validate`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sessionId: sessionId.value }),
+      }
+    )
 
-  //   if (!result.valid) {
-  //     await logMessage('Session validation failed:', result.error)
-  //     return handleInvalidSession(request)
-  //   }
+    if (!response.ok) {
+      await logMessage('Session validation failed: {status}', {
+        status: response.status,
+      })
+      return handleInvalidSession(request)
+    }
+    await logMessage('Session validation successful, reviewing response')
 
-  //   await logMessage('Session validated')
+    await logMessage('Response: {response}', { response: response })
 
-  //   const protectedRoute = Object.keys(PROTECTED_PATHS).find((route) =>
-  //     pathWithoutLang.startsWith(route)
-  //   )
+    const responseText = await response.text()
 
-  //   if (protectedRoute) {
-  //     const requiredRoles = PROTECTED_PATHS[protectedRoute]
-  //     const userSectionRoles = result.data?.roles.sectionRoles
+    await logMessage('Response text: {responseText}', { responseText })
 
-  //     if (!hasRequiredSectionRoles(userSectionRoles || [], requiredRoles)) {
-  //       await logMessage(
-  //         'User lacks required sectionRoles: {required}, {userSectionRoles}',
-  //         {
-  //           required: requiredRoles,
-  //           userSectionRoles,
-  //         }
-  //       )
-  //       return NextResponse.redirect(new URL('/unauthorized', request.url))
-  //     }
-  //   }
+    const result = (await response.json()) as SessionResponse
 
-  //   await logMessage('Access granted')
-  //   return NextResponse.next()
-  // } catch (error) {
-  //   await logMessage('Middleware error: {error}', { error }, LogLevel.ERROR)
-  //   return handleInvalidSession(request)
-  // } finally {
-  //   await logMessage('====== MIDDLEWARE END ======')
-  // }
+    if (!result.valid) {
+      await logMessage('Session validation failed:', result.error)
+      return handleInvalidSession(request)
+    }
+
+    await logMessage('Session validated')
+
+    const protectedRoute = Object.keys(PROTECTED_PATHS).find((route) =>
+      pathWithoutLang.startsWith(route)
+    )
+
+    if (protectedRoute) {
+      const requiredRoles = PROTECTED_PATHS[protectedRoute]
+      const userSectionRoles = result.data?.roles.sectionRoles
+
+      if (!hasRequiredSectionRoles(userSectionRoles || [], requiredRoles)) {
+        await logMessage(
+          'User lacks required sectionRoles: {required}, {userSectionRoles}',
+          {
+            required: requiredRoles,
+            userSectionRoles,
+          }
+        )
+        return NextResponse.redirect(new URL('/unauthorized', request.url))
+      }
+    }
+
+    await logMessage('Access granted')
+    return NextResponse.next()
+  } catch (error) {
+    await logMessage('Middleware error: {error}', { error }, LogLevel.ERROR)
+    return handleInvalidSession(request)
+  } finally {
+    await logMessage('====== MIDDLEWARE END ======')
+  }
 }
 
-// function hasRequiredSectionRoles(
-//   userRoles: string[],
-//   requiredRoles: readonly string[]
-// ): boolean {
-//   return (
-//     Array.isArray(userRoles) &&
-//     Array.isArray(requiredRoles) &&
-//     requiredRoles.some((role) => userRoles.includes(role))
-//   )
-// }
+function hasRequiredSectionRoles(
+  userRoles: string[],
+  requiredRoles: readonly string[]
+): boolean {
+  return (
+    Array.isArray(userRoles) &&
+    Array.isArray(requiredRoles) &&
+    requiredRoles.some((role) => userRoles.includes(role))
+  )
+}
 
 function redirectToLogin(request: NextRequest) {
   const url = new URL('/login', request.url)
