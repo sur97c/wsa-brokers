@@ -2,6 +2,7 @@
 
 import { SectionRole } from '@/models/user/roles'
 import { logMessage } from '@/utils/logger/logger'
+import { LogLevel } from '@/utils/logger/types'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -16,11 +17,82 @@ const PROTECTED_PATHS: Record<string, SectionRole[]> = {
   '/app/dashboard': [SectionRole.DASHBOARD],
 } as const
 
+async function validateSession(
+  request: NextRequest,
+  sessionId: string
+): Promise<{
+  valid: boolean
+  data?: any
+  error?: string
+}> {
+  try {
+    const response = await fetch(
+      `${request.nextUrl.origin}/api/session/validate`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sessionId }),
+      }
+    )
+
+    const textResponse = await response.text()
+
+    await logMessage('Validate Session Response:', {
+      status: response.status,
+      headers: Object.fromEntries(response.headers.entries()),
+      rawResponse: textResponse,
+    })
+
+    if (!textResponse) {
+      return {
+        valid: false,
+        error: 'Empty response from validation endpoint',
+      }
+    }
+
+    let result
+    try {
+      result = JSON.parse(textResponse)
+    } catch (error) {
+      await logMessage(
+        'Error parsing validation error: {error}, response: {response}',
+        {
+          error: error,
+          response: textResponse,
+        },
+        LogLevel.ERROR
+      )
+      return {
+        valid: false,
+        error: `Invalid JSON response: ${textResponse.slice(0, 100)}...`,
+      }
+    }
+
+    return {
+      valid: true,
+      data: result,
+    }
+  } catch (error) {
+    await logMessage(
+      'Session validation error: {error}',
+      { error },
+      LogLevel.ERROR
+    )
+    return {
+      valid: false,
+      error:
+        error instanceof Error ? error.message : 'Unknown validation error',
+    }
+  }
+}
+
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const pathWithoutLang = pathname.replace(/^\/[a-z]{2}/, '')
 
-  await logMessage('=== MIDDLEWARE START ===', {})
+  await logMessage('=== MIDDLEWARE START ===')
   await logMessage('middleware::Request URL: {url}', { url: request.url })
   await logMessage('middleware::Method: {method}', { method: request.method })
   await logMessage('middleware::Pathname: {pathname}', {
@@ -38,7 +110,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (request.method === 'OPTIONS') {
-    await logMessage('middleware::OPTIONS request detected, allowing', {})
+    await logMessage('middleware::OPTIONS request detected, allowing')
     return new NextResponse(null, {
       status: 200,
       headers: {
@@ -55,7 +127,10 @@ export async function middleware(request: NextRequest) {
   })
 
   if (!sessionId?.value) {
-    await logMessage('middleware::No session found, redirecting to login', {})
+    await logMessage(
+      'middleware::No session found, redirecting to login',
+      LogLevel.WARN
+    )
     return redirectToLogin(request)
   }
 
@@ -67,33 +142,25 @@ export async function middleware(request: NextRequest) {
   })
 
   if (protectedRoute) {
+    const validation = await validateSession(request, sessionId.value)
+    if (!validation.valid) {
+      await logMessage(
+        'Session validation failed: {error}',
+        { error: validation.error },
+        LogLevel.ERROR
+      )
+      return redirectToLogin(request)
+    }
+
+    const result = await validation.data
+    await logMessage('middleware::Session validation result: {result}', {
+      result,
+    })
+
     const requiredRoles = PROTECTED_PATHS[protectedRoute]
     await logMessage('middleware::Required roles: {requiredRoles}', {
       requiredRoles: requiredRoles,
     })
-    const response = await fetch(
-      `${request.nextUrl.origin}/api/session/validate`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ sessionId: sessionId.value }),
-      }
-    )
-
-    const result = await response.json()
-    await logMessage('middleware::Session validation result: {result}', {
-      result: result,
-    })
-
-    if (!result.valid) {
-      await logMessage(
-        'middleware::Session validation failed, redirecting to login',
-        {}
-      )
-      return redirectToLogin(request)
-    }
 
     const userSectionRoles = result.data?.roles.sectionRoles
     await logMessage(
@@ -107,14 +174,14 @@ export async function middleware(request: NextRequest) {
     if (!hasRequiredSectionRoles(userSectionRoles || [], requiredRoles)) {
       await logMessage(
         'middleware::User lacks required section roles, redirecting to unauthorized',
-        {}
+        LogLevel.WARN
       )
       return NextResponse.redirect(new URL('/unauthorized', request.url))
     }
   }
 
-  await logMessage('middleware::Access granted', {})
-  await logMessage('=== MIDDLEWARE END ===', {})
+  await logMessage('middleware::Access granted')
+  await logMessage('=== MIDDLEWARE END ===')
   return NextResponse.next()
 }
 
