@@ -40,6 +40,19 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Verificar si la petición viene del middleware
+    const isMiddlewareRequest =
+      request.headers.get('x-middleware-request') === 'true'
+    if (!isMiddlewareRequest) {
+      return NextResponse.json(
+        {
+          valid: false,
+          error: { message: 'Unauthorized request', code: 'UNAUTHORIZED' },
+        },
+        { status: 401 }
+      )
+    }
+
     const { sessionId } = await request.json()
 
     // Obtenemos la sesión y convertimos sus datos

@@ -32,8 +32,10 @@ async function validateSession(
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-middleware-request': 'true',
         },
         body: JSON.stringify({ sessionId }),
+        next: { revalidate: 0 },
       }
     )
 
