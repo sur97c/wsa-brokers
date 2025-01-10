@@ -1,7 +1,5 @@
 // app/[lang]/(public)/home/components/Header.tsx
 
-// 'use client'
-
 import { clsx } from 'clsx'
 import { Globe, Menu, X } from 'lucide-react'
 import Image from 'next/image'
@@ -57,41 +55,44 @@ const Header: React.FC = () => {
         >
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
-
-        <nav className="hidden md:flex items-center space-x-6">
-          {menuItems.map((item) => (
-            <Link key={item.key} href={item.href} legacyBehavior>
-              <a
-                className="text-gray-600 transition-all duration-300 
+        <div
+          className="bg-black/20 duration-500 group mb-8
+              hover:[filter:grayscale(0%)_brightness(1)] hover:border-[#FF8C00] 
+              hover:shadow-lg md:p-6 p-4 rounded-lg shadow-md transform transition-all"
+        >
+          <nav className="hidden md:flex items-center space-x-6">
+            {menuItems.map((item) => (
+              <Link key={item.key} href={item.href} legacyBehavior>
+                <a
+                  className="text-gray-600 transition-all duration-1000 
                   hover:text-[#FF8C00] [filter:grayscale(100%)] hover:[filter:grayscale(0%)]
                   relative after:content-[''] after:absolute after:w-0 after:h-0.5 
                   after:bg-[#FF8C00] after:left-0 after:-bottom-1 after:transition-all 
                   hover:after:w-full"
-              >
-                {getMenuTranslation(item.key)}
-              </a>
-            </Link>
-          ))}
-
-          <div className="relative">
-            <button
-              onClick={toggleLanguage}
-              className="flex items-center gap-2 px-3 py-2 rounded-full
+                >
+                  {getMenuTranslation(item.key)}
+                </a>
+              </Link>
+            ))}
+            <div className="relative">
+              <button
+                onClick={toggleLanguage}
+                className="flex items-center gap-2 px-3 py-2 rounded-full
                   transition-all duration-300
                   [filter:grayscale(100%)] hover:[filter:grayscale(0%)]
                   text-[#ffffffff] hover:text-[#FF8C00]
                   bg-gray-100 hover:bg-gray-200"
-            >
-              <Globe className="w-5 h-5 text-gray-600 hover:text-[#FF8C00]" />
-              <span className="text-sm font-medium text-gray-600 hover:text-[#FF8C00]">
-                {language === 'es'
-                  ? t(translations.modules.home.spanish)
-                  : t(translations.modules.home.english)}
-              </span>
-            </button>
-          </div>
-        </nav>
-
+              >
+                <Globe className="w-5 h-5 text-gray-600 hover:text-[#FF8C00]" />
+                <span className="text-sm font-medium text-gray-600 hover:text-[#FF8C00]">
+                  {language === 'es'
+                    ? t(translations.modules.home.spanish)
+                    : t(translations.modules.home.english)}
+                </span>
+              </button>
+            </div>
+          </nav>
+        </div>
         <div
           className={clsx(
             'fixed inset-0 bg-white z-50 transition-transform duration-300 md:hidden',

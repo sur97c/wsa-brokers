@@ -80,33 +80,31 @@ const Home: React.FC = () => {
         <main className="flex flex-col">
           <section
             className="flex flex-col items-center justify-center px-4 md:px-6 
-            text-center mb-32"
+            text-center md:mb-32 mb-16"
           >
-            {' '}
-            <h1
-              className="text-2xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-4 
-              transition-all duration-500 max-w-4xl text-white
-              [filter:grayscale(100%)] hover:[filter:grayscale(0%)]
-              hover:text-[#1A237E]"
+            <div
+              className="bg-black/20 duration-500 group mb-8
+              hover:[filter:grayscale(0%)_brightness(1)] hover:border-[#FF8C00] 
+              hover:shadow-lg md:p-6 p-4 rounded-lg shadow-md transform transition-all"
             >
-              {t(translations.modules.home.welcome)}
-            </h1>
-            <p
-              className="text-base md:text-lg lg:text-xl mb-8 text-gray-600 
+              <h1
+                className="text-2xl md:text-4xl lg:text-5xl font-bold text-gray-800 
+                transition-all duration-500 max-w-4xl text-white
+                [filter:grayscale(100%)] hover:[filter:grayscale(0%)]
+              hover:text-[#FF8C00]"
+              >
+                {t(translations.modules.home.welcome)}
+              </h1>
+            </div>
+
+            {/* <p
+              className="mt-6 text-base md:text-lg lg:text-xl mb-8 text-gray-600 
               transition-all duration-300 max-w-2xl px-4 text-white
               [filter:grayscale(100%)] hover:[filter:grayscale(0%)]
               hover:text-[#1A237E]/80"
             >
               {t(translations.modules.home.message)}
-            </p>
-            {/* <button
-              onClick={() => handleLoginClick()}
-              className="px-6 py-2 bg-gray-800 text-white rounded transition-all duration-500
-                [filter:grayscale(100%)] hover:[filter:grayscale(0%)]
-                hover:bg-[#FF8C00] hover:shadow-lg transform hover:-translate-y-0.5
-                shadow-md hover:shadow-[#FF8C00]/20"
-            >
-              {loading && t(translations.core.loading.accessGranted)} */}
+            </p> */}
             <LoadingButton
               faIcon={faArrowRight}
               loading={loading}
@@ -123,7 +121,6 @@ const Home: React.FC = () => {
                 hover:bg-[#FF8C00] hover:shadow-lg transform hover:-translate-y-0.5
                 shadow-md hover:shadow-[#FF8C00]/20"
             />
-            {/* </button> */}
           </section>
 
           <div className="relative">
@@ -186,15 +183,15 @@ const Home: React.FC = () => {
   }
 
   const mediaItems: MediaItem[] = [
-    // {
-    //   src: '/images/wsa-brokers-poster.png',
-    //   type: 'image',
-    // },
     {
-      src: '/videos/background.mp4',
-      type: 'video',
-      posterImage: '/images/wsa-brokers-poster.png',
+      src: '/images/wsa-brokers-poster.png',
+      type: 'image',
     },
+    // {
+    //   src: '/videos/backgroundJoin.mp4',
+    //   type: 'video',
+    //   posterImage: '/images/wsa-brokers-poster.png',
+    // },
     {
       src: '/videos/background1.mp4',
       type: 'video',
