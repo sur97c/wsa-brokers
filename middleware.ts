@@ -44,14 +44,14 @@ export async function middleware(request: NextRequest) {
     'Checking session: {sessionId}, service: {service}/api/session/validate',
     {
       sessionId: request.cookies.get('sessionId')?.value,
-      service: request.nextUrl.origin,
+      service: process.env.VERCEL_API_URL,
     }
   )
 
   try {
     const response = await fetch(
       // `${request.nextUrl.origin}/api/session/validate`,
-      `${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}/api/session/validate`,
+      `${process.env.VERCEL_API_URL}/api/session/validate`,
       {
         method: 'POST',
         headers: {
