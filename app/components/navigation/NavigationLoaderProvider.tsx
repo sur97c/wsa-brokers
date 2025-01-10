@@ -3,10 +3,9 @@
 'use client'
 
 import { usePathname, useSearchParams } from 'next/navigation'
-import { useState, useEffect, type ReactNode } from 'react'
+import { useState, useEffect, useRef, type ReactNode } from 'react'
 
 import { NavigationLoaderContext } from '@/contexts/navigation/navigation.context'
-
 import { NavigationLoader } from './NavigationLoader'
 
 interface NavigationLoaderProviderProps {
@@ -20,30 +19,47 @@ export const NavigationLoaderProvider: React.FC<
   const [loadingMessage, setLoadingMessage] = useState<string>()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const mountedRef = useRef(false)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout
+    // Solo mostrar el loader para navegaciones subsecuentes
+    if (!mountedRef.current) {
+      mountedRef.current = true
+      return
+    }
 
     const handleStart = () => {
-      timeoutId = setTimeout(() => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      timeoutRef.current = setTimeout(() => {
         setIsNavigating(true)
-      }, 150) // Delay para evitar flashes en navegaciones rápidas
+      }, 150)
     }
 
     const handleComplete = () => {
-      if (timeoutId) clearTimeout(timeoutId)
-      setTimeout(() => {
-        setIsNavigating(false)
-        setLoadingMessage(undefined)
-      }, 300) // Dar tiempo para la animación de salida
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      setIsNavigating(false)
+      setLoadingMessage(undefined)
     }
 
     handleStart()
+
     return () => {
-      if (timeoutId) clearTimeout(timeoutId)
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
       handleComplete()
     }
   }, [pathname, searchParams])
+
+  // Limpiar timeouts al desmontar
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
 
   return (
     <NavigationLoaderContext.Provider
