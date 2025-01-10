@@ -50,8 +50,8 @@ export async function middleware(request: NextRequest) {
 
   try {
     const response = await fetch(
-      // 'https://wsa-amber.vercel.app/api/session/validate',
-      `${request.nextUrl.origin}/api/session/validate`,
+      // `${request.nextUrl.origin}/api/session/validate`,
+      `${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}/api/session/validate`,
       {
         method: 'POST',
         headers: {
