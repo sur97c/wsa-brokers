@@ -50,8 +50,8 @@ export async function middleware(request: NextRequest) {
 
   try {
     const response = await fetch(
-      'https://wsa-amber.vercel.app/api/session/validate',
-      // `${request.nextUrl.origin}/api/session/validate`,
+      // 'https://wsa-amber.vercel.app/api/session/validate',
+      `${request.nextUrl.origin}/api/session/validate`,
       {
         method: 'POST',
         headers: {
@@ -67,13 +67,6 @@ export async function middleware(request: NextRequest) {
       })
       return handleInvalidSession(request)
     }
-    await logMessage('Session validation successful, reviewing response')
-
-    await logMessage('Response: {response}', { response: response })
-
-    const responseText = await response.text()
-
-    await logMessage('Response text: {responseText}', { responseText })
 
     const result = (await response.json()) as SessionResponse
 
