@@ -15,7 +15,7 @@ import {
   UserPlus,
   Activity,
 } from 'lucide-react'
-import React, { ReactNode, useEffect, useMemo, useState } from 'react'
+import React, { memo, ReactNode, useEffect, useMemo, useState } from 'react'
 import {
   BarChart,
   Bar,
@@ -271,7 +271,7 @@ export default function BrokerDashboard() {
   }, [users])
 
   // New User Stats Cards Component
-  const UserStatsCards = () => (
+  const UserStatsCards = memo(() => (
     <motion.div
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
       variants={containerVariants}
@@ -303,7 +303,9 @@ export default function BrokerDashboard() {
         color="bg-violet-500"
       />
     </motion.div>
-  )
+  ))
+
+  UserStatsCards.displayName = 'UserStatsCards'
 
   // New User Activity Chart Component
   const UserActivityChart = () => (
@@ -354,13 +356,7 @@ export default function BrokerDashboard() {
     },
   }
 
-  const KPICard: React.FC<KPICardProps> = ({
-    title,
-    value,
-    icon,
-    trend,
-    color,
-  }) => {
+  const KPICard = memo<KPICardProps>(({ title, value, icon, trend, color }) => {
     const numericValue = parseFloat(value.replace(/[^0-9.-]+/g, ''))
     const [count, setCount] = useState(0)
 
@@ -421,9 +417,11 @@ export default function BrokerDashboard() {
         </div>
       </motion.div>
     )
-  }
+  })
 
-  const GaugeCard: React.FC<GaugeCardProps> = ({ data }) => {
+  KPICard.displayName = 'KPICard'
+
+  const GaugeCard = memo<GaugeCardProps>(({ data }) => {
     const Icon = data.icon
     const radius = 40
     const circumference = 2 * Math.PI * radius
@@ -497,10 +495,12 @@ export default function BrokerDashboard() {
         </div>
       </motion.div>
     )
-  }
+  })
+
+  GaugeCard.displayName = 'GaugeCard'
 
   // Componente para gráficas animadas
-  const AnimatedChart: React.FC<AnimatedChartProps> = ({ children, title }) => (
+  const AnimatedChart = memo<AnimatedChartProps>(({ children, title }) => (
     <motion.div
       variants={itemVariants}
       className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-lg transition-shadow duration-300"
@@ -515,7 +515,9 @@ export default function BrokerDashboard() {
         {children}
       </motion.div>
     </motion.div>
-  )
+  ))
+
+  AnimatedChart.displayName = 'AnimatedChart'
 
   return (
     <motion.div

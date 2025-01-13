@@ -4,8 +4,8 @@ import { initializeApp, FirebaseApp, getApps, getApp } from 'firebase/app'
 import {
   getAuth,
   Auth,
-  onAuthStateChanged,
-  User,
+  // onAuthStateChanged,
+  // User,
   setPersistence,
   browserLocalPersistence,
 } from 'firebase/auth'
@@ -35,16 +35,16 @@ const app: FirebaseApp = !getApps().length
 const auth: Auth = getAuth(app)
 const db: Firestore = getFirestore(app)
 
-// Authentication state observer
-onAuthStateChanged(auth, (user: User | null) => {
-  if (user) {
-    console.log('Authenticated user:', user.uid)
-  } else {
-    console.log('Unauthenticated user')
-  }
-})
+// // Authentication state observer
+// onAuthStateChanged(auth, (user: User | null) => {
+//   if (user) {
+//     console.log('Authenticated user:', user.uid)
+//   } else {
+//     console.log('Unauthenticated user')
+//   }
+// })
 
 // Configurar persistencia
-await setPersistence(auth, browserLocalPersistence)
+setPersistence(auth, browserLocalPersistence).catch(console.error)
 
 export { app, auth, db }

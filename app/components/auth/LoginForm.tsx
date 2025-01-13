@@ -8,7 +8,7 @@ import { X } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 
 import LoadingButton from '@/components/ui/buttons/LoadingButton'
-import { useSafeRouter } from '@/hooks/navigation/useSafeRouter'
+import { useSafeNavigator } from '@/hooks/navigation/useSafeNavigator'
 import { BusinessErrorCode } from '@/models/errors'
 import { SectionRole } from '@/models/user/roles'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
@@ -32,7 +32,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   onNeedVerification,
 }) => {
   const { t, translations } = useTranslations()
-  const { safeNavigate } = useSafeRouter()
+  const { navigateTo } = useSafeNavigator()
   const dispatch = useAppDispatch()
   const [email, setEmail] = useState('')
 
@@ -49,14 +49,19 @@ const LoginForm: React.FC<LoginFormProps> = ({
     if (user && isAuthenticated) {
       if (onClose) onClose()
 
-      if (user?.sectionRoles.includes(SectionRole.DASHBOARD)) {
-        safeNavigate('/dashboard')
+      // Primero intentar navegar al dashboard si tiene acceso
+      if (user.sectionRoles.includes(SectionRole.DASHBOARD)) {
+        navigateTo('/app/dashboard')
       } else {
-        const defaultRole = user.sectionRoles[0] || ''
-        safeNavigate(`/${defaultRole}`)
+        // Si no tiene acceso al dashboard, usar el primer sectionRole disponible
+        const firstAvailableRole = user.sectionRoles[0]
+        if (firstAvailableRole) {
+          navigateTo(`/${firstAvailableRole.toLowerCase()}`)
+        }
       }
     }
-  }, [user, onClose, safeNavigate, isAuthenticated])
+    return () => {}
+  }, [user, isAuthenticated, onClose, navigateTo])
 
   const handleLoginUser = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()

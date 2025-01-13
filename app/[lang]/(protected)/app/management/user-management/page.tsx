@@ -3,16 +3,15 @@
 'use client'
 
 import React from 'react'
-
-import { useSafeRouter } from '@/hooks/navigation/useSafeRouter'
+import { useSafeNavigator } from '@/hooks/navigation/useSafeNavigator'
 import { useTranslations } from '@/translations/hooks/useTranslations'
 
 const UserListPage = () => {
   const { t, translations } = useTranslations()
-  const { safeNavigate } = useSafeRouter()
+  const { navigateTo } = useSafeNavigator()
 
   //   const handleEditUser = (userId: string) => {
-  //     safeNavigate(`/management/user-management/${userId}`)
+  //     navigateTo(`/management/user-management/${userId}`)
   //   }
 
   return (
@@ -22,7 +21,7 @@ const UserListPage = () => {
           {t(translations.modules.management.users.list.title)}
         </h1>
         <button
-          onClick={() => safeNavigate('/management/user-management/new')}
+          onClick={() => navigateTo('/management/user-management/new')}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
           {t(translations.modules.management.users.list.addUser)}

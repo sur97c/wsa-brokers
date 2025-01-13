@@ -169,6 +169,8 @@ export const logoutUser = createAsyncThunk(
       if (!result.success) {
         return rejectWithValue(result.error)
       }
+      window.localStorage.removeItem('firebase:authUser')
+      window.localStorage.removeItem('firebase:persistence')
       return { reason }
     } catch (error) {
       return rejectWithValue(error)
@@ -296,7 +298,7 @@ const authSlice = createSlice({
     builder
       // Login
       .addCase(loginUser.pending, (state) => {
-        state.logoutRequested = false
+        // state.logoutRequested = false
         state.loading = true
         state.error = null
         state.sessionStatus = 'checking'
@@ -323,28 +325,40 @@ const authSlice = createSlice({
       // Check Session
       .addCase(checkSessionUser.pending, (state) => {
         state.sessionStatus = 'checking'
+        state.loading = true
         state.error = null
       })
       .addCase(checkSessionUser.fulfilled, (state, action) => {
         state.isAuthenticated = true
         state.user = action.payload
         state.sessionStatus = 'authenticated'
+        state.loading = false
         state.error = null
       })
       .addCase(checkSessionUser.rejected, (state, action) => {
         state.user = null
         state.isAuthenticated = false
         state.sessionStatus = 'unauthenticated'
+        state.loading = false
         state.error = action.payload as BaseError
       })
 
       // Logout
+      .addCase(logoutUser.pending, (state) => {
+        state.loading = true
+      })
       .addCase(logoutUser.fulfilled, (state) => {
         state.logoutRequested = false
         state.user = null
         state.isAuthenticated = false
         state.success = true
         state.sessionStatus = 'unauthenticated'
+        state.loading = false
+        state.error = null
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as BaseError
       })
 
       // Recover Access
@@ -382,6 +396,7 @@ const authSlice = createSlice({
       })
 
       .addCase(updateUserActivity.fulfilled, (state, action) => {
+        state.loading = false
         if (action.payload) {
           state.lastActivitySync = action.payload
           // Asegurarnos de guardar la fecha como string ISO

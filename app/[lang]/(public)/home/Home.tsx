@@ -2,7 +2,8 @@
 
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { clsx } from 'clsx'
-import React, { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import React, { useState, useEffect } from 'react'
 
 import LoginForm from '@/components/auth/LoginForm'
 import RecoveryForm from '@/components/auth/RecoveryForm'
@@ -14,14 +15,19 @@ import {
   FlipCard,
   type BackContentType,
 } from '@/components/ui/FlipCard/FlipCard'
-import { useAppSelector } from '@/redux/hooks'
+
+import { useAppSelector, useAppDispatch } from '@/redux/hooks'
+import { logoutUser } from '@/redux/slices/auth.slice'
 import { useTranslations } from '@/translations/hooks/useTranslations'
+import { logMessage } from '@/utils/logger/logger'
 
 import FeatureSection from './components/FeatureSection'
 import Header from './components/Header'
 
 const Home: React.FC = () => {
   const { t, translations } = useTranslations()
+  const dispatch = useAppDispatch()
+  const searchParams = useSearchParams()
   const [showLogin, setShowLogin] = useState(false)
   const [isFlipped, setIsFlipped] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
@@ -30,6 +36,29 @@ const Home: React.FC = () => {
   const { user, isAuthenticated, loading } = useAppSelector(
     (state) => state.auth
   )
+
+  useEffect(() => {
+    const handleSessionValidation = async () => {
+      const sessionNoFound = searchParams.get('session_no_found')
+
+      if (sessionNoFound && isAuthenticated && user) {
+        await logMessage('Session validation failed, logging out user', {
+          userId: user.uid,
+          session_no_found: sessionNoFound,
+          isAuthenticated,
+        })
+
+        try {
+          await dispatch(logoutUser('SESSION_ERROR')).unwrap()
+          await logMessage('Logout successful')
+        } catch (error) {
+          await logMessage('Logout failed', { error })
+        }
+      }
+    }
+
+    handleSessionValidation()
+  }, [dispatch, searchParams, user, isAuthenticated])
 
   const handleLoginClick = (type: BackContentType = 'recovery') => {
     setBackContent(type)
@@ -183,15 +212,20 @@ const Home: React.FC = () => {
   }
 
   const mediaItems: MediaItem[] = [
-    {
-      src: '/images/wsa-brokers-poster.png',
-      type: 'image',
-    },
+    // {
+    //   src: '/images/wsa-brokers-poster.png',
+    //   type: 'image',
+    // },
     // {
     //   src: '/videos/backgroundJoin.mp4',
     //   type: 'video',
     //   posterImage: '/images/wsa-brokers-poster.png',
     // },
+    {
+      src: '/videos/background4.mp4',
+      type: 'video',
+      posterImage: '/images/wsa-brokers-poster.png',
+    },
     {
       src: '/videos/background1.mp4',
       type: 'video',
@@ -204,11 +238,6 @@ const Home: React.FC = () => {
     },
     {
       src: '/videos/background3.mp4',
-      type: 'video',
-      posterImage: '/images/wsa-brokers-poster.png',
-    },
-    {
-      src: '/videos/background4.mp4',
       type: 'video',
       posterImage: '/images/wsa-brokers-poster.png',
     },

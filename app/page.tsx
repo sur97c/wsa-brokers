@@ -1,7 +1,10 @@
 // app/page.tsx
 
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useSafeNavigator } from '@/hooks/navigation/useSafeNavigator'
 
 export default function RootPage(): void {
-  redirect('/es')
+  const { navigateTo } = useSafeNavigator()
+  navigateTo('/')
 }

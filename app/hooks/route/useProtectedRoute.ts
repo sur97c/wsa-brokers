@@ -1,9 +1,8 @@
 // app/hooks/route/useProtectedRoute.ts
 
 import { useState, useEffect, useCallback } from 'react'
-
 import { useNavigationLoader } from '@/hooks/navigation/useNavigationLoader'
-import { useSafeRouter } from '@/hooks/navigation/useSafeRouter'
+import { useSafeNavigator } from '@/hooks/navigation/useSafeNavigator'
 import type {
   ProtectedRouteMetadata,
   ProtectedRouteState,
@@ -25,7 +24,7 @@ export const useProtectedRoute = (
   const { user, isAuthenticated, sessionStatus } = useAppSelector(
     (state) => state.auth
   )
-  const { safeNavigate } = useSafeRouter()
+  const { navigateTo } = useSafeNavigator()
   const { setIsNavigating, setLoadingMessage } = useNavigationLoader()
 
   const checkAuthorization = useCallback(() => {
@@ -49,7 +48,7 @@ export const useProtectedRoute = (
       if (sessionStatus === 'unauthenticated') {
         if (mounted && config.mode !== 'dual') {
           setIsNavigating(true)
-          safeNavigate('/')
+          navigateTo('/')
         }
         return
       }
@@ -59,7 +58,7 @@ export const useProtectedRoute = (
         if (!isAuthorized) {
           if (mounted) {
             setIsNavigating(true)
-            safeNavigate('/unauthorized')
+            navigateTo('/unauthorized')
           }
           return
         }
@@ -85,7 +84,7 @@ export const useProtectedRoute = (
     isAuthenticated,
     checkAuthorization,
     config.mode,
-    safeNavigate,
+    navigateTo,
     setIsNavigating,
     setLoadingMessage,
     t,

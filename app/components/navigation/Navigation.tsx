@@ -28,7 +28,7 @@ import { usePathname } from 'next/navigation'
 import React, { useState, useRef, useEffect } from 'react'
 
 import { useNavigation } from '@/hooks/navigation/useNavigation'
-import { useSafeRouter } from '@/hooks/navigation/useSafeRouter'
+import { useSafeNavigator } from '@/hooks/navigation/useSafeNavigator'
 import type { MenuItem } from '@/models/navigation/menu'
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { logoutUser, selectAuthView } from '@/redux/slices/auth.slice'
@@ -56,7 +56,7 @@ export default function Navigation({ isOpen, onToggle }: NavigationProps) {
     // state.mockConfig.useMockData && state.mockConfig.mockEntities.users
     return true
   })
-  const { safeNavigate } = useSafeRouter()
+  const { navigateTo } = useSafeNavigator()
 
   const toggleDropdown = () => setDropdownOpen(!isDropdownOpen)
 
@@ -115,7 +115,7 @@ export default function Navigation({ isOpen, onToggle }: NavigationProps) {
 
   const handleLogoutUser = async () => {
     await dispatch(logoutUser('USER_REQUESTED'))
-    safeNavigate('/')
+    navigateTo('/')
   }
 
   const Footer: React.FC = () => {

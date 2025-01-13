@@ -18,21 +18,22 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ children }) => {
 
   useEffect(() => {
     // const currentPath = pathname + searchParams.toString()
+
     const handleStart = () => {
-      // Retrasar mostrar el loading para evitar flashes en cargas rápidas
-      timeoutRef.current = setTimeout(() => {
-        setIsVisible(true)
-      }, 150) // Ajustable según necesidad
-      setIsLoading(true)
+      // Solo mostrar loading si realmente estamos navegando a una nueva ruta
+      if (!isLoading) {
+        timeoutRef.current = setTimeout(() => {
+          setIsVisible(true)
+        }, 150)
+        setIsLoading(true)
+      }
     }
 
     const handleComplete = () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current)
       }
-      // Animación de salida suave
       setIsVisible(false)
-      // Dar tiempo para la animación antes de remover completamente
       setTimeout(() => {
         setIsLoading(false)
       }, 300)
@@ -46,7 +47,7 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({ children }) => {
       }
       handleComplete()
     }
-  }, [pathname, searchParams])
+  }, [pathname, searchParams, isLoading])
 
   if (!isLoading) return null
 

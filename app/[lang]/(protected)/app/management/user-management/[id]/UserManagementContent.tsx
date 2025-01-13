@@ -2,8 +2,8 @@
 
 'use client'
 
-import { useRouter } from 'next/navigation'
 import React, { useState, useEffect } from 'react'
+import { useSafeNavigator } from '@/hooks/navigation/useSafeNavigator'
 import { UserRole } from '@/models/user/roles'
 import type { UserProfile } from '@/models/user/user'
 import { useAppSelector } from '@/redux/hooks'
@@ -19,7 +19,7 @@ const UserManagementContent: React.FC<UserManagementContentProps> = ({
   id,
 }) => {
   const { t, translations } = useTranslations()
-  const router = useRouter()
+  const { navigateTo } = useSafeNavigator()
   const [user, setUser] = useState<UserProfile | null>(null)
   const currentUser = useAppSelector(selectAuthView).user
 
@@ -37,7 +37,7 @@ const UserManagementContent: React.FC<UserManagementContentProps> = ({
   }
 
   const handleClose = () => {
-    router.push('/management/user-management')
+    navigateTo('/management/user-management')
   }
 
   return (

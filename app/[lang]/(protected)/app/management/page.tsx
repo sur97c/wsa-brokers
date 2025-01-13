@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useSafeRouter } from '@/hooks/navigation/useSafeRouter'
+import { useSafeNavigator } from '@/hooks/navigation/useSafeNavigator'
 import { useAppSelector } from '@/redux/hooks'
 import type { RootState } from '@/redux/types'
 import { useTranslations } from '@/translations/hooks/useTranslations'
@@ -10,16 +10,17 @@ import { useTranslations } from '@/translations/hooks/useTranslations'
 export default function Management() {
   const { t, translations } = useTranslations()
   const user = useAppSelector((state: RootState) => state.auth.user)
-  const { safeNavigate } = useSafeRouter()
+
+  const { navigateTo } = useSafeNavigator()
 
   const handleNewUser = (event: React.MouseEvent<HTMLButtonElement>): void => {
     event.preventDefault()
-    safeNavigate(`/management/user-management/new`)
+    navigateTo(`/management/user-management/new`)
   }
 
   const handleEditUser = (event: React.MouseEvent<HTMLButtonElement>): void => {
     event.preventDefault()
-    safeNavigate(`/management/user-management/${user?.uid}`)
+    navigateTo(`/management/user-management/${user?.uid}`)
   }
 
   return (
